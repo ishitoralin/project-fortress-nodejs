@@ -1,5 +1,5 @@
 const express = require('express');
-// const db = require(__dirname + "/modules/connectDB.js");
+const db = require(__dirname + '/modules/connectDB.js');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
