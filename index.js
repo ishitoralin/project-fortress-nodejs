@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.use('/lesson', require(__dirname + '/routes/lesson'));
 //登入用
 app.use('/api/auth', authRoutes);
 //使用者資料用
