@@ -5,6 +5,8 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const memberRoutes = require(__dirname + '/routes/memberRoutes.js');
 const authRoutes = require(__dirname + '/routes/memberRoutes.js');
+const recordRoutes = require(__dirname + '/routes/recordRoutes.js');
+
 require('dotenv').config();
 const app = express();
 
@@ -18,6 +20,11 @@ app.use(cookieParser());
 
 //登入用
 app.use('/api/auth', authRoutes);
+
+// >>> record
+app.use('/record', recordRoutes);
+// <<< record
+
 //使用者資料用
 app.use('/api/member', memberRoutes);
 app.use('*', async (req, res) => {
