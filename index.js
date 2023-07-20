@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const memberRouter = require('./routes/memberRoutes.js');
+const productRouter = require('./routes/productRoutes.js');
 // const authRouter = require('./routes/memberRoutes.js');
 // const authJwtRouter = require('./routes/auth-jwt.js');
 const emailRouter = require('./routes/emailRoutes.js');
@@ -25,6 +26,8 @@ app.use(cookieParser());
 app.use('/api/email', emailRouter);
 //使用者資料用
 app.use('/api/member', memberRouter);
+//product
+app.use('/api/product', productRouter);
 app.use('*', async (req, res) => {
   res.status(404).json({ message: '路徑錯誤' });
 });

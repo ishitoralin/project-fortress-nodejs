@@ -25,6 +25,7 @@ router
       return res.status(404).json({ code: 404, message: '沒有資料' });
     }
   })
+  .post('/', (req, res, next) => {})
 
   .use('*', (req, res) => {
     res.status(404).json({ code: 404, message: '錯誤的member routes' });
