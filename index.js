@@ -5,7 +5,14 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const memberRoutes = require(__dirname + '/routes/memberRoutes.js');
 const authRoutes = require(__dirname + '/routes/memberRoutes.js');
-const recordRoutes = require(__dirname + '/routes/recordRoutes.js');
+// >>> for Sean
+const testRoutes = require(__dirname + '/routes/record/test.js');
+const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
+const foodRoutes = require(__dirname + '/routes/record/foodType.js');
+const dietRecordRoutes = require(__dirname + '/routes/record/dietRecord.js');
+const exerciseRecordRoutes = require(__dirname +
+  '/routes/record/exerciseRecord.js');
+// <<< for sean
 
 require('dotenv').config();
 const app = express();
@@ -21,8 +28,14 @@ app.use(cookieParser());
 //登入用
 app.use('/api/auth', authRoutes);
 
-// >>> record
-app.use('/record', recordRoutes);
+// =================================================================
+// === record ======================================================
+// =================================================================
+app.use('/test', testRoutes);
+app.use('/exe-type', exerciseRoutes);
+app.use('/food-type', foodRoutes);
+app.use('/diet-record', dietRecordRoutes);
+app.use('/exercise-record', exerciseRecordRoutes);
 // <<< record
 
 //使用者資料用
