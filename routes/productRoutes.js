@@ -4,7 +4,48 @@ const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
 router
+  .get('/no-page/:cid/', async (req, res) => {
+    let sql;
+    let category;
+    let rows = [];
+    switch (parseInt(req.params.cid)) {
+      case 1:
+        //衣服
+        category = 'product';
+        sql = `SELECT * FROM ${category}_name;`;
+        break;
+
+      case 2:
+        //食品
+        category = 'food';
+        sql = `SELECT * FROM ${category}_name;`;
+        break;
+
+      case 3:
+        //器材
+        category = 'equipment';
+        sql = `SELECT * FROM ${category}_name;`;
+
+        break;
+      default:
+        return res.status(404).json({ code: 404, message: '沒有資料' });
+    }
+    [rows] = await db.query(sql);
+    console.log(rows);
+    if (rows.length > 0) {
+      rows.forEach((element) => {
+        element['created_at'] = dayjs(element['created_at']).format(
+          'YYYY-MM-D'
+        );
+      });
+      return res.status(200).json({ code: 200, data: rows, message: '有資料' });
+    }
+
+    res.status(400).json({ code: 400, message: '沒資料' });
+  })
+  //取得指定 cid 指定 sid 資料
   .get('/:cid/:sid', async (req, res) => {
+    // console.log(req);
     let sql;
     let category;
     switch (parseInt(req.params.cid)) {
@@ -44,7 +85,8 @@ router
       }
     }
   })
-  //取得指定category的product資料
+
+  //取得指定category的product資料(有分頁)
   .get('/:cid', async (req, res) => {
     let output = {
       redirect: '',
@@ -106,7 +148,7 @@ router
       const sql = ` SELECT * FROM ${category}_name ${where} LIMIT ${
         output.perPage * (output.page - 1)
       }, ${output.perPage}`;
-    //   console.log(sql);
+      //   console.log(sql);
       [rows] = await db.query(sql);
     }
     rows.forEach((element) => {
