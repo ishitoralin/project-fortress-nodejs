@@ -4,6 +4,23 @@ const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
 router
+  .get('/main-page/', async (req, res) => {
+    let sql = ` SELECT * FROM product_name WHERE sid IN (1,10,5,6,7,8) ;`;
+    let productRows;
+    [productRows] = await db.query(sql);
+    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,5) ;`;
+    let foodRows;
+    [foodRows] = await db.query(sql);
+    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,5) ;`;
+    let equipmentRows;
+    [equipmentRows] = await db.query(sql);
+    return res.status(200).json({
+      code: 200,
+      data: { productRows, foodRows, equipmentRows },
+      message: '有資料',
+    });
+  })
+
   .get('/no-page/:cid/', async (req, res) => {
     let sql;
     let category;
