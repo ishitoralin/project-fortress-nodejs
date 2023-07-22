@@ -8,10 +8,10 @@ router
     let sql = ` SELECT * FROM product_name WHERE sid IN (1,10,5,6,7,8) ;`;
     let productRows;
     [productRows] = await db.query(sql);
-    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,5) ;`;
+    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,6) ;`;
     let foodRows;
     [foodRows] = await db.query(sql);
-    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,5) ;`;
+    sql = ` SELECT * FROM food_name WHERE sid IN (1,2,3,4,5,6) ;`;
     let equipmentRows;
     [equipmentRows] = await db.query(sql);
     return res.status(200).json({
