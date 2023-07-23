@@ -31,3 +31,4 @@ router
     res.status(404).json({ code: 404, message: '錯誤的member routes' });
   });
 module.exports = router;
+/*     `SELECT member.sid, email, password, member.name, mobile, birth, address, ms.name, hero_icon, mr.role, created_at, active, providerData, google_uid FROM member JOIN member_role AS mr ON role_sid= mr.sid JOIN member_sex AS ms ON sex_sid =ms.sid WHERE email = '${email}'` */

@@ -4,9 +4,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const memberRouter = require('./routes/memberRoutes.js');
+const authRouter = require('./routes/authRoutes.js');
 const productRouter = require('./routes/productRoutes.js');
-// const authRouter = require('./routes/memberRoutes.js');
-// const authJwtRouter = require('./routes/auth-jwt.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
 require('dotenv').config();
@@ -21,12 +20,12 @@ app.use(express.json());
 app.use(cookieParser());
 
 //登入用
-// app.use('/api/auth', authRouter);
-// app.use('/api/auth-jwt', authJwtRouter);
+app.use('/api/auth', authRouter);
+//寄信用
 app.use('/api/email', emailRouter);
 //使用者資料用
 app.use('/api/member', memberRouter);
-//product
+//商品用
 app.use('/api/product', productRouter);
 app.use('*', async (req, res) => {
   res.status(404).json({ message: '路徑錯誤' });
