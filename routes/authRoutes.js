@@ -7,7 +7,6 @@ require('dayjs/locale/zh-tw');
 const path = require('path');
 require('dotenv').config();
 const router = express.Router();
-module.exports = router;
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -39,8 +38,13 @@ router.post('/login', async (req, res) => {
       { expiresIn: '60d' }
     );
     //放入refreshToken進httponly cookie
-    res.cookie('g4RefreshToken', refreshToken, { httpOnly: true });
+    res.cookie('g4RefreshToken', refreshToken, {
+      maxAge: 5184000000,
+      httpOnly: true,
+    });
+
     //放入accessToken進json 前端接住丟進state內
+    user.hero_icon = `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`;
     return res.status(200).json({
       code: 200,
       accessToken,
@@ -56,3 +60,4 @@ router.post('/login', async (req, res) => {
   //TODO
   res.status(401).json({ code: 401, message: '帳號或密碼錯誤' });
 });
+module.exports = router;

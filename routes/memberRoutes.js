@@ -26,6 +26,10 @@ router
     }
   })
   .post('/', (req, res, next) => {})
+  .get('/member-favorite-courses', (req, res, next) => {})
+  .delete('/member-favorite-courses', (req, res, next) => {})
+  .get('/member-favorite-products', (req, res, next) => {})
+  .delete('/member-favorite-products', (req, res, next) => {})
 
   .use('*', (req, res) => {
     res.status(404).json({ code: 404, message: '錯誤的member routes' });
