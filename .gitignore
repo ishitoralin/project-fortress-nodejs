@@ -1,2 +1,7 @@
 node_modules/
 .env
+public/imgs/member/*jpg
+public/imgs/product/*jpg
+public/imgs/record/*jpg
+public/imgs/coach/*jpg
+public/imgs/lesson/*jpg
