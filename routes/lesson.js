@@ -1,4 +1,5 @@
 const db = require(__dirname + '/../modules/connectDB.js');
+const dayjs = require('dayjs');
 const express = require('express');
 
 const router = express.Router();
@@ -30,22 +31,22 @@ router.get('/', async (req, res) => {
       queryObj.queryItems.push(location_sid));
   // keyword && sqlList.push(`location_sid = '${location_sid}'`)
 
-  if (queryObj.sqlList.length === 0) {
-    const [lessons_noTags] = await db.query(baseSql);
-    const lessons = await getLessonTags(lessons_noTags);
-    return res.json(lessons);
-  }
-
-  const sqlListEnd = queryObj.sqlList.length - 1;
-  const sql = queryObj.sqlList.reduce(
-    (prevSql, nextSql, index) =>
-      index === sqlListEnd
-        ? `${prevSql} ${nextSql}`
-        : `${prevSql} ${nextSql} AND`,
-    `${baseSql} WHERE`
+  // splice sql syntax
+  const spliceSql = queryObj.sqlList.reduce(
+    (prevSql, nextSql) => `${prevSql} ${nextSql} AND`,
+    queryObj.sqlList.length === 0 ? baseSql : `${baseSql} WHERE`
   );
 
-  const [lessons] = await db.query(sql, queryObj.queryItems);
+  // remove last AND
+  const sql =
+    queryObj.sqlList.length === 0 ? spliceSql : spliceSql.slice(0, -4);
+
+  const [lessons_noTags] = await db.query(sql, queryObj.queryItems);
+  const lessons = await getLessonTags(lessons_noTags);
+
+  lessons.forEach(
+    (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
+  );
 
   return res.json(lessons);
 });
@@ -63,8 +64,8 @@ const getLessonTags = async (lessons) => {
       SELECT name FROM c_l_tags WHERE sid IN ( 
       SELECT tag_sid FROM c_l_rela_lesson_tag WHERE lesson_sid = ? )
     `;
-
       const [tags] = await db.query(getTagsSql, [lesson.category_sid]);
+
       return { ...lesson, tags: tags.map((tag) => tag.name) };
     })
   );
