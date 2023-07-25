@@ -27,28 +27,26 @@ router
       //驗證資料庫拉出來的資料 的密碼和 下面密碼是不是一樣
       const result = await bcrypt.compare(password, user.password);
       if (!result) {
-        return res.status(401).json({ code: 401, message: '帳號或密碼錯誤' });
+        return res.status(401);
       }
+
       //jwt
       //成功就放入JWT accessToken 和 refreshToken
       const accessToken = jwt.sign(
         {
-          id: user.sid,
+          sid: user.sid,
           name: user.name,
         },
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: '60m' }
       );
       const refreshToken = jwt.sign(
-        { id: user.id, username: user.username },
+        { sid: user.sid, name: user.name },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: '60d' }
       );
       //放入refreshToken進httponly cookie
-      res.cookie('g4RefreshToken', refreshToken, {
-        maxAge: 5184000000,
-        httpOnly: true,
-      });
+      res.cookie('g4RefreshToken', refreshToken);
 
       //放入accessToken進json 前端接住丟進state內
       user.hero_icon = `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`;
@@ -65,6 +63,6 @@ router
       });
     }
     //TODO
-    res.status(401).json({ code: 401, message: '帳號或密碼錯誤' });
+    res.status(401);
   });
 module.exports = router;
