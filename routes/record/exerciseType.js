@@ -5,6 +5,7 @@ const router = express.Router();
 // ===============================================================
 // === exercise ==================================================
 // ===============================================================
+// NOTE: not using right now
 //>>> get exercise type for exercise list
 router.get('/exercise-type', async (req, res) => {
   let sql = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img, et.exercise_vid
@@ -32,24 +33,26 @@ router.get('/exercise-type/body-part/:sid/:keyword?', async (req, res) => {
     data: null,
   };
 
-  let sql = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img, et.exercise_vid
+  let sql = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img AS img, et.exercise_vid AS vid
   FROM record_exercise_type et
   JOIN record_exercis_bodyPart_ref ebRef ON ebRef.exerciseType_sid = et.sid`;
+
+  let sql1 = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img AS img, et.exercise_vid AS vid
+FROM record_exercise_type et`;
+
   const sid = parseInt(req.params.sid) || 0;
   const keyword = req.params.keyword || '';
   let where = ' WHERE et.status=1';
-
+  // FIXME: keyword目前無法搜尋部位
   //===在沒有sid&keyword或只有keyword的情況下，使用bodypart關聯表JOIN會造成重複的資料，因此用另外的SQL
   if (!sid && !keyword) {
-    sql = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img, et.exercise_vid
-  FROM record_exercise_type et`;
+    sql = sql1;
     where += '';
   } else if (!keyword) {
     where += ` AND ebRef.bodyPart_sid =${sid}`;
   } else if (!sid) {
     const kw_escaped = db.escape('%' + keyword + '%');
-    sql = `SELECT et.sid, et.exercise_name, et.exercise_description, et.exercise_img, et.exercise_vid
-    FROM record_exercise_type et`;
+    sql = sql1;
     where += ` AND (et.exercise_name LIKE ${kw_escaped} OR et.exercise_description LIKE ${kw_escaped} )`;
   } else {
     const kw_escaped = db.escape('%' + keyword + '%');

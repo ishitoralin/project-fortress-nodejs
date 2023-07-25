@@ -46,7 +46,6 @@ router.get(
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
     WHERE er.member_sid = ${sid} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
     ORDER BY er.exe_date DESC;`;
-    // FIXME: 會有時區問題, 在MySQL裡面打是正確的，但是在這裡時區會跑掉
 
     let [rows] = await db.query(sql);
 
@@ -99,5 +98,25 @@ router.get('/diet-record/:sid', async (req, res) => {
   res.json(output);
 });
 //<<< get diet record by member sid
+
+// >>> add exercise record
+// TODO: unfinishedr
+router.post('/add-record', async (req, res, next) => {
+  // res.json({ a: 123 });
+  let mID = 5;
+  // console.log(req.body);
+  const { sid, quantity, sets, reps, date } = req.body;
+  // console.log(sid, quantity, sets, reps, date);
+
+  const sql = `INSERT INTO record_exercise_record( member_sid ,  exe_type_sid ,  weight ,  sets ,  reps ,  exe_date ) VALUES ( ? , ? , ? , ? , ? , ? )`;
+  let result;
+  [result] = await db.query(sql, [mID, sid, quantity, sets, reps, date]);
+  console.log(result);
+  res.json({
+    result,
+    postData: req.body,
+  });
+});
+// <<< add exercise record
 
 module.exports = router;
