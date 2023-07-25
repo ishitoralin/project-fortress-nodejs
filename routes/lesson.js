@@ -11,13 +11,18 @@ router.get('/tags', async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-  const baseSql = `SELECT l.*, c.nickname FROM c_l_lessons l JOIN c_l_coachs c ON l.coach_sid = c.sid`;
+  const baseSql = `
+    SELECT l.*, c.nickname, ct.img FROM c_l_lessons l 
+    JOIN c_l_coachs c ON l.coach_sid = c.sid 
+    JOIN c_l_category ct ON l.category_sid = ct.sid
+  `;
+
   const queryObj = {
     sqlList: [],
     queryItems: [],
   };
 
-  const { location, keyword } = req.query;
+  const { location } = req.query;
 
   const location_sid = location ? await getLocationSid(location) : -1;
   location_sid === -1 ||
@@ -26,8 +31,9 @@ router.get('/', async (req, res) => {
   // keyword && sqlList.push(`location_sid = '${location_sid}'`)
 
   if (queryObj.sqlList.length === 0) {
-    const [datas] = await db.query(baseSql);
-    return res.json(datas);
+    const [lessons_noTags] = await db.query(baseSql);
+    const lessons = await getLessonTags(lessons_noTags);
+    return res.json(lessons);
   }
 
   const sqlListEnd = queryObj.sqlList.length - 1;
@@ -39,19 +45,29 @@ router.get('/', async (req, res) => {
     `${baseSql} WHERE`
   );
 
-  const [datas] = await db.query(sql, queryObj.queryItems);
+  const [lessons] = await db.query(sql, queryObj.queryItems);
 
-  return res.json(datas);
-  res.json({
-    sql,
-    queryItems: queryObj.queryItems,
-  });
+  return res.json(lessons);
 });
 
 const getLocationSid = async (location) => {
   const sql = `SELECT sid FROM c_l_location WHERE name = ?`;
   const [datas] = await db.query(sql, [location]);
   return datas.length !== 0 ? datas[0].sid : -1;
+};
+
+const getLessonTags = async (lessons) => {
+  return await Promise.all(
+    lessons.map(async (lesson) => {
+      const getTagsSql = `
+      SELECT name FROM c_l_tags WHERE sid IN ( 
+      SELECT tag_sid FROM c_l_rela_lesson_tag WHERE lesson_sid = ? )
+    `;
+
+      const [tags] = await db.query(getTagsSql, [lesson.category_sid]);
+      return { ...lesson, tags: tags.map((tag) => tag.name) };
+    })
+  );
 };
 
 module.exports = router;
