@@ -48,6 +48,7 @@ app.use('/exercise-record', exerciseRecordRoutes);
 app.use('/api/member', memberRouter);
 //商品用
 app.use('/api/product', productRouter);
+
 app.use(express.static('public'));
 app.use('*', async (req, res) => {
   res.status(404).json({ message: '路徑錯誤' });
