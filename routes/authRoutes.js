@@ -5,32 +5,20 @@ const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
 const path = require('path');
+const { protect } = require('../modules/auth');
 require('dotenv').config();
 const router = express.Router();
-const protect = async (req, res, next) => {
-  const auth = req.get('Authorization');
-  console.log(auth);
-  if (auth && auth.indexOf('Bearer ') === 0) {
-    const token = auth.slice(7);
-    let decoded = null;
 
-    decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    console.log(decoded.id);
-    // const currentUser
-  }
-
-  // req.locals.user =user;
-
-  next();
-};
 router
   .get('/test', protect, (req, res) => {
     res.json({ data: 123 });
   })
+  .get('/check-auth', protect, (req, res, next) => {
+    console.log(res.locals.user);
+    res.status(200).json({});
+  })
   .post('/login', async (req, res) => {
     const { email, password } = req.body;
-    console.log(req.body);
-    console.log(email, password);
     let rows;
     [rows] = await db.query(`SELECT * FROM member WHERE email = '${email}'`);
     let user;
@@ -43,7 +31,6 @@ router
       }
       //jwt
       //成功就放入JWT accessToken 和 refreshToken
-      console.log('使用者資料正確');
       const accessToken = jwt.sign(
         {
           id: user.sid,
@@ -81,4 +68,3 @@ router
     res.status(401).json({ code: 401, message: '帳號或密碼錯誤' });
   });
 module.exports = router;
-exports.protect;

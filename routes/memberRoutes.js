@@ -1,14 +1,16 @@
 const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
+const { protect, getUser } = require('../modules/auth');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
+router.use(protect);
 router
   //取得指定id的USER資料
   .get('/', async (req, res) => {
     // req.locals.user = {sid:1,};
     // const { id } = req.locals.user;
-    let id = 5;
+    const { id } = res.locals.user;
     if (!id) {
       return res.status(404).json({ code: 404, message: '沒有資料' });
     }
@@ -29,7 +31,7 @@ router
   .get('/member-favorite-courses', async (req, res, next) => {})
   .delete('/member-favorite-courses', async (req, res, next) => {})
   .get('/member-favorite-products', async (req, res, next) => {
-    let id = 5;
+    const { id } = res.locals.user;
     let sql = `SELECT CASE
     WHEN mfp.category_sid = 1 THEN pn.product_name
     WHEN mfp.category_sid = 2 THEN fn.food_name
@@ -56,7 +58,6 @@ WHERE mfp.member_sid =${id}
     if (rows.length > 0) {
       return res.status(200).json({ code: 200, rows, message: '有資料' });
     }
-    console.log(rows.length);
 
     return res.status(404).json({ code: 404, message: '沒有資料' });
   })
