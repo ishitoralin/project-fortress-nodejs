@@ -8,6 +8,15 @@ const authRouter = require('./routes/authRoutes.js');
 const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
+// >>> for Sean
+const testRoutes = require(__dirname + '/routes/record/test.js');
+const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
+const foodRoutes = require(__dirname + '/routes/record/foodType.js');
+const dietRecordRoutes = require(__dirname + '/routes/record/dietRecord.js');
+const exerciseRecordRoutes = require(__dirname +
+  '/routes/record/exerciseRecord.js');
+// <<< for sean
+
 require('dotenv').config();
 const app = express();
 
@@ -24,6 +33,17 @@ app.use('/lesson', require(__dirname + '/routes/lesson'));
 app.use('/api/auth', authRouter);
 //寄信用
 app.use('/api/email', emailRouter);
+
+// =================================================================
+// === record ======================================================
+// =================================================================
+app.use('/test', testRoutes);
+app.use('/exe-type', exerciseRoutes);
+app.use('/food-type', foodRoutes);
+app.use('/diet-record', dietRecordRoutes);
+app.use('/exercise-record', exerciseRecordRoutes);
+// <<< record
+
 //使用者資料用
 app.use('/api/member', memberRouter);
 //商品用
