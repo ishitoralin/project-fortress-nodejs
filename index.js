@@ -1,5 +1,5 @@
 const express = require('express');
-// const db = require(__dirname + "/modules/connectDB.js");
+const db = require(__dirname + '/modules/connectDB.js');
 const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
@@ -19,6 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 
+app.use('/lesson', require(__dirname + '/routes/lesson'));
 //登入用
 app.use('/api/auth', authRouter);
 //寄信用
