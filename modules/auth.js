@@ -1,31 +1,18 @@
 const jwt = require('jsonwebtoken');
 
 exports.protect = async (req, res, next) => {
+  //從Authorization headers拿到 accesstoken->解密->把資料往下送
   const auth = req.get('Authorization');
-  const refreshCookie = req.cookies.g4RefreshToken;
-  if (refreshCookie) {
-    let decodedRefresh = null;
-    decodedRefresh = jwt.verify(
-      refreshCookie,
-      process.env.REFRESH_TOKEN_SECRET
-    );
-    const accessToken = jwt.sign(
-      {
-        sid: decodedRefresh.sid,
-        name: decodedRefresh.name,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '60m' }
-    );
-  }
   if (auth && auth.indexOf('Bearer ') === 0) {
     const token = auth.slice(7);
     let decoded = null;
     decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     res.locals.user = decoded;
+    console.log('from protect:', auth, '\n', 'decoded:', res.locals.user);
     next();
   } else {
-    return res.status(401).end();
+    //沒拿到accesstoken則直接回傳401,中斷操作
+    return res.status(401);
   }
 };
 exports.getUser = async (req, res, next) => {
