@@ -8,6 +8,7 @@ const authRouter = require('./routes/authRoutes.js');
 const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
+// const cart = require(__dirname + '/routes/shoppingcart/cart.js');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -33,7 +34,17 @@ app.use('/lesson', require(__dirname + '/routes/lesson'));
 app.use('/api/auth', authRouter);
 //寄信用
 app.use('/api/email', emailRouter);
+// const cart = );
 
+// shoppingcart use
+app.use('/cart', (req, res) => {
+  res.json({
+    name: 'test',
+  });
+});
+app.get('/qstest', (req, res) => {
+  res.json(req.query);
+});
 // =================================================================
 // === record ======================================================
 // =================================================================
