@@ -8,7 +8,7 @@ const authRouter = require('./routes/authRoutes.js');
 const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
-// const cart = require(__dirname + '/routes/shoppingcart/cart.js');
+const cart = require(__dirname + '/routes/cart.js');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -16,6 +16,7 @@ const foodRoutes = require(__dirname + '/routes/record/foodType.js');
 const dietRecordRoutes = require(__dirname + '/routes/record/dietRecord.js');
 const exerciseRecordRoutes = require(__dirname +
   '/routes/record/exerciseRecord.js');
+
 // <<< for sean
 
 require('dotenv').config();
@@ -37,14 +38,20 @@ app.use('/api/email', emailRouter);
 // const cart = );
 
 // shoppingcart use
-app.use('/cart', (req, res) => {
-  res.json({
-    name: 'test',
-  });
-});
+app.use('/cart', cart);
 app.get('/qstest', (req, res) => {
   res.json(req.query);
 });
+// TODO add products from products page and lesson page (to database (order_cart))
+// check if user login state before enter shoppingcart
+// show order list datas to shopping cart
+// show recommanded products datas to shopping cart
+// show popular products datas to shopping cart
+// show recommanded lesson datas to shopping cart
+// send datas to database (order_main) when user click the confirm button then replace the page to secondpage
+// loaging data (order_main) then show in the secondpage
+// if user click the import user info button > fetch user info from database (member)
+// 
 // =================================================================
 // === record ======================================================
 // =================================================================
