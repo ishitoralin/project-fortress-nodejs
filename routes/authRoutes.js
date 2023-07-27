@@ -64,9 +64,10 @@ router
           id: user.sid,
           name: user.name,
           role: user.role_sid,
-          icon: `http://localhost:${process.env.PORT}/imgs/member/${
-            user.hero_icon === 'null' ? '' : user.hero_icon
-          }`,
+          icon:
+            user.hero_icon === null
+              ? ''
+              : `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`,
         },
         message: 'refresh成功',
       });

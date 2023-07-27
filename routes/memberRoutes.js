@@ -24,7 +24,7 @@ router
     WHERE m.sid = ? ;`;
     const [rows] = await db.query(sql, [sid]);
     if (rows.length > 0) {
-      console.log(rows[0]['birth'] === null);
+      rows[0]['mobile'] ||= '';
       rows[0]['birth'] =
         rows[0]['birth'] === null
           ? ''
@@ -37,11 +37,28 @@ router
     }
   })
   //修改指定會員資料
-  .post('/', (req, res, next) => {
-    console.log(req.body);
+  .patch('/', async (req, res, next) => {
+    let { mobile, birth, address, sex } = req.body;
+    (mobile ||= null), (birth ||= null), (address ||= null);
+    switch (sex) {
+      case '男':
+        sex = 1;
+        break;
+      case '女':
+        sex = 2;
+        break;
+      default:
+        sex = 3;
+        break;
+    }
+
     const { sid } = res.locals.user;
     const sql = `UPDATE member SET 
-    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
+    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = 50;`;
+    // mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
+    let rows;
+    rows = await db.query(sql, [mobile, birth, address, sex]);
+    console.log(rows[0].affectedRows);
     res.status(200).json({ message: '修改成功' });
     // .json({ code: 200, data: rows[0], message: '有資料' });
   })
