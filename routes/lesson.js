@@ -23,13 +23,31 @@ router.get('/', async (req, res) => {
     queryItems: [],
   };
 
-  const { location } = req.query;
+  // return res.json(req.query);
+  const { location, keyword, tags, dateAfter, dateBefore, price } = req.query;
 
   const location_sid = location ? await getLocationSid(location) : -1;
-  location_sid === -1 ||
-    (queryObj.sqlList.push(`l.location_sid = ?`) &&
-      queryObj.queryItems.push(location_sid));
-  // keyword && sqlList.push(`location_sid = '${location_sid}'`)
+  if (location_sid !== -1) {
+    queryObj.sqlList.push(`l.location_sid = ?`);
+    queryObj.queryItems.push(location_sid);
+  }
+
+  if (keyword) {
+    queryObj.sqlList.push(`l.name LIKE ? OR c.nickname LIKE ?`);
+    queryObj.queryItems.push(`%${keyword}%`, `%${keyword}%`);
+  }
+
+  if (
+    Array.isArray(price) &&
+    !isNaN(parseInt(price[0])) &&
+    !isNaN(parseInt(price[1]))
+  ) {
+    queryObj.sqlList.push(`l.price BETWEEN ? AND ?`);
+    queryObj.queryItems.push(
+      Math.min(price[0], price[1]),
+      Math.max(price[0], price[1])
+    );
+  }
 
   // splice sql syntax
   const spliceSql = queryObj.sqlList.reduce(
@@ -54,7 +72,7 @@ router.get('/', async (req, res) => {
 const getLocationSid = async (location) => {
   const sql = `SELECT sid FROM c_l_location WHERE name = ?`;
   const [datas] = await db.query(sql, [location]);
-  return datas.length !== 0 ? datas[0].sid : -1;
+  return datas.length !== 0 ? datas[0].sid : 1;
 };
 
 const getLessonTags = async (lessons) => {
