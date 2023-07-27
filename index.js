@@ -42,7 +42,7 @@ app.use('/cart', cart);
 app.get('/qstest', (req, res) => {
   res.json(req.query);
 });
-// TODO add products from products page and lesson page (to database (order_cart))
+// TODO add products from products pages and lesson pages (to database (order_cart))
 // check if user login state before enter shoppingcart
 // show order list datas to shopping cart
 // show recommanded products datas to shopping cart
@@ -50,8 +50,9 @@ app.get('/qstest', (req, res) => {
 // show recommanded lesson datas to shopping cart
 // send datas to database (order_main) when user click the confirm button then replace the page to secondpage
 // loaging data (order_main) then show in the secondpage
-// if user click the import user info button > fetch user info from database (member)
-// 
+// if user click the import user info button > fetch user info from database (member), use sql syntax below
+// 'SELECT m.name , m.email ,m.mobile , m.address FROM member AS m WHERE m.sid = ?'
+//
 // =================================================================
 // === record ======================================================
 // =================================================================
