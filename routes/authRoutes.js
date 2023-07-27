@@ -13,6 +13,7 @@ router
     res.json({ data: 123 });
   })
   .get('/check-auth', getUser, (req, res, next) => {
+    console.log('check-auth work');
     console.log(res?.locals?.user);
     if (res?.locals?.user) {
       return res.status(200).json({ code: 200, message: '已登入' });

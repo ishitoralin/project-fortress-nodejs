@@ -22,31 +22,37 @@ router
   })
 
   .get('/no-page/:cid/', async (req, res) => {
-    let sql;
     let category;
+    let sql;
     let rows = [];
     switch (parseInt(req.params.cid)) {
       case 1:
         //衣服
         category = 'product';
-        sql = `SELECT * FROM ${category}_name;`;
+        // sql = `SELECT * FROM ${category}_name AS p;`;
         break;
 
       case 2:
         //食品
         category = 'food';
-        sql = `SELECT * FROM ${category}_name;`;
+        // sql = `SELECT * FROM ${category}_name  AS p;`;
         break;
 
       case 3:
         //器材
         category = 'equipment';
-        sql = `SELECT * FROM ${category}_name;`;
+        // sql = `SELECT * FROM ${category}_name  AS p;`;
 
         break;
       default:
         return res.status(404).json({ code: 404, message: '沒有資料' });
     }
+    sql = ` SELECT p.sid,
+    p.${category}_name AS name,
+    p.category_id,
+    p.price,
+    p.picture,
+    p.created_at FROM ${category}_name AS p;`;
     [rows] = await db.query(sql);
     console.log(rows);
     if (rows.length > 0) {
