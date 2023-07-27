@@ -42,17 +42,27 @@ app.use('/cart', cart);
 app.get('/qstest', (req, res) => {
   res.json(req.query);
 });
-// TODO add products from products pages and lesson pages (to database (order_cart))
-// check if user login state before enter shoppingcart
-// show order list datas to shopping cart
+
+// show order list datas to shopping cart and update api (method patch)
+
+// add products from products pages and lesson pages (to database (order_cart))
+
+//  (products parts)
+// button (add products to shoppingcart and database,(2 places (detail pages(can choose quantity) and  product list page(set quantity as 1))))
+
+// button for deleting all items at once
+
+// send datas to database (order_main) when user click the confirm button then replace the page to secondpage
+// loaging data (order_main) then show in the secondpage
+
 // show recommanded products datas to shopping cart
 // show popular products datas to shopping cart
 // show recommanded lesson datas to shopping cart
-// send datas to database (order_main) when user click the confirm button then replace the page to secondpage
-// loaging data (order_main) then show in the secondpage
+
+// check if user login state before entering shoppingcart
 // if user click the import user info button > fetch user info from database (member), use sql syntax below
 // 'SELECT m.name , m.email ,m.mobile , m.address FROM member AS m WHERE m.sid = ?'
-//
+
 // =================================================================
 // === record ======================================================
 // =================================================================
