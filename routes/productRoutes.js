@@ -75,24 +75,29 @@ router
       case 1:
         //衣服
         category = 'product';
-        sql = `SELECT * FROM ${category}_name;`;
+
         break;
 
       case 2:
         //食品
         category = 'food';
-        sql = `SELECT * FROM ${category}_name;`;
+
         break;
 
       case 3:
         //器材
         category = 'equipment';
-        sql = `SELECT * FROM ${category}_name;`;
 
         break;
       default:
         return res.status(404).json({ code: 404, message: '沒有資料' });
     }
+    sql = ` SELECT p.sid,
+    p.${category}_name AS name,
+    p.category_id,
+    p.price,
+    p.picture,
+    p.created_at FROM ${category}_name AS p;`;
     if (req.params.sid) {
       sql = sql.replace(';', ` WHERE sid = ${db.escape(req.params.sid)}`);
       const [rows] = await db.query(sql);
