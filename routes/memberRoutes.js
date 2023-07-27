@@ -1,25 +1,34 @@
 const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
-const { protect, getUser } = require('../modules/auth');
+const { protect } = require('../modules/auth');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
+//保護用的middleware 同時能decode token 取得 user 丟到req.locals.user 往後面傳
 router.use(protect);
 router
   //取得指定id的USER資料
   .get('/', async (req, res) => {
     // req.locals.user = {sid:1,};
     // const { id } = req.locals.user;
-    const { id } = res.locals.user;
-    if (!id) {
+    console.log(res.locals.user);
+    const { sid } = res.locals.user;
+    if (!sid) {
       return res.status(404).json({ code: 404, message: '沒有資料' });
     }
 
-    let sql = `SELECT * FROM member where sid = ? ;`;
-    const [rows] = await db.query(sql, [id]);
+    let sql = `SELECT 
+    m.name , m.email ,m.mobile , 
+    m.birth , m.address , ms.name AS sex 
+    FROM member AS m JOIN member_sex AS ms ON m.sex_sid = ms.sid
+    WHERE m.sid = ? ;`;
+    const [rows] = await db.query(sql, [sid]);
     if (rows.length > 0) {
-      delete rows[0]['password'];
-      rows[0]['created_at'] = dayjs(rows[0]['created_at']).format('YYYY-MM-D');
+      console.log(rows[0]['birth'] === null);
+      rows[0]['birth'] =
+        rows[0]['birth'] === null
+          ? ''
+          : dayjs(rows[0]['birth']).format('YYYY-MM-DD');
       return res
         .status(200)
         .json({ code: 200, data: rows[0], message: '有資料' });
@@ -27,7 +36,15 @@ router
       return res.status(404).json({ code: 404, message: '沒有資料' });
     }
   })
-  .post('/', (req, res, next) => {})
+  //修改指定會員資料
+  .post('/', (req, res, next) => {
+    console.log(req.body);
+    const { sid } = res.locals.user;
+    const sql = `UPDATE member SET 
+    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
+    res.status(200).json({ message: '修改成功' });
+    // .json({ code: 200, data: rows[0], message: '有資料' });
+  })
   .get('/member-favorite-courses', async (req, res, next) => {})
   .delete('/member-favorite-courses', async (req, res, next) => {})
   .get('/member-favorite-products', async (req, res, next) => {
