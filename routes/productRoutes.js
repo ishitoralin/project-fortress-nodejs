@@ -58,7 +58,7 @@ router
     if (rows.length > 0) {
       rows.forEach((element) => {
         element['created_at'] = dayjs(element['created_at']).format(
-          'YYYY-MM-D'
+          'YYYY-MM-DD'
         );
       });
       return res.status(200).json({ code: 200, data: rows, message: '有資料' });
@@ -103,7 +103,7 @@ router
       const [rows] = await db.query(sql);
       if (rows.length > 0) {
         rows[0]['created_at'] = dayjs(rows[0]['created_at']).format(
-          'YYYY-MM-D'
+          'YYYY-MM-DD'
         );
         return res
           .status(200)
@@ -180,13 +180,13 @@ router
       [rows] = await db.query(sql);
     }
     rows.forEach((element) => {
-      element['created_at'] = dayjs(element['created_at']).format('YYYY-MM-D');
+      element['created_at'] = dayjs(element['created_at']).format('YYYY-MM-DD');
     });
     return res
       .status(200)
       .json({ code: 200, data: rows, output, message: '有資料' });
     // if (rows[0].length > 0) {
-    //   rows[0]['created_at'] = dayjs(rows[0]['created_at']).format('YYYY-MM-D');
+    //   rows[0]['created_at'] = dayjs(rows[0]['created_at']).format('YYYY-MM-DD');
     //   return res
     //     .status(200)
     //     .json({ code: 200, data: rows[0], output, message: '有資料' });
