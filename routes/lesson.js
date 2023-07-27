@@ -37,6 +37,29 @@ router.get('/', async (req, res) => {
     queryObj.queryItems.push(`%${keyword}%`, `%${keyword}%`);
   }
 
+  if (tags) {
+    const baseSql = `l.category_sid IN (SELECT DISTINCT lesson_sid FROM c_l_rela_lesson_tag WHERE c_l_rela_lesson_tag.tag_sid IN (SELECT sid FROM c_l_tags WHERE name`;
+
+    queryObj.sqlList.push(
+      Array.isArray(tags)
+        ? `${baseSql} IN ( ${Array(tags.length).fill('?').join(',')} )))`
+        : `${baseSql} = ? ))`
+    );
+    Array.isArray(tags)
+      ? tags.forEach((tag) => queryObj.queryItems.push(tag))
+      : queryObj.queryItems.push(tags);
+  }
+
+  if (dateAfter && dayjs(dateAfter).isValid()) {
+    queryObj.sqlList.push(`l.time > ?`);
+    queryObj.queryItems.push(dateAfter);
+  }
+
+  if (dateBefore && dayjs(dateBefore).isValid()) {
+    queryObj.sqlList.push(`l.time < ?`);
+    queryObj.queryItems.push(dateBefore);
+  }
+
   if (
     Array.isArray(price) &&
     !isNaN(parseInt(price[0])) &&
@@ -58,6 +81,8 @@ router.get('/', async (req, res) => {
   // remove last AND
   const sql =
     queryObj.sqlList.length === 0 ? spliceSql : spliceSql.slice(0, -4);
+
+  console.log(sql)
 
   const [lessons_noTags] = await db.query(sql, queryObj.queryItems);
   const lessons = await getLessonTags(lessons_noTags);
