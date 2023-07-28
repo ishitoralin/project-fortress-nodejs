@@ -6,7 +6,6 @@ const moment = require('moment-timezone');
 // ===============================================================
 // === exercise ==================================================
 // ===============================================================
-// TODO: check the fetch SQL, is all the output needed?
 //>>> get all exercise record
 router.get(
   '/exercise-record/:start?/:end?',
@@ -39,9 +38,8 @@ router.get(
       return res.status(200).json(output);
     }
 
-    const fm = 'YYYY-MM-DD HH:mm:ss';
-
-    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS type, et.exercise_name AS name, er.weight, er.sets, er.reps, er.exe_date AS date
+    const fm = 'YYYY-MM-DD';
+    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
     WHERE er.member_sid = ${sid} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
@@ -58,7 +56,7 @@ router.get(
       row.date = moment(row.date).format(fm);
       return row;
     });
-
+    // console.log(rows);
     output.success = true;
     output.data = rows;
     res.json(output);
@@ -66,57 +64,45 @@ router.get(
 );
 //<<< get all exercise record
 
-//>>> get diet record by member sid
-router.get('/diet-record/:sid', async (req, res) => {
-  const output = {
-    success: false,
-    error: '',
-    data: null,
-  };
-
-  const sid = parseInt(req.params.sid) || 0;
-  if (!sid) {
-    output.error = 'wrong id';
-    return res.status(200).json(output);
-  }
-
-  let sql = `SELECT dr.sid, m.name, ft.food_type, dr.quantity,ft.calories,ft.protein,ft.unit, dr.diet_time
-  FROM record_diet_record dr
-  JOIN member m ON dr.member_sid = m.sid AND m.active='1'
-  JOIN record_food_type ft ON dr.food_sid = ft.sid
-  WHERE m.sid =${sid}
-  ORDER BY dr.diet_time DESC;`;
-  let [rows] = await db.query(sql);
-
-  if (!rows.length) {
-    output.error = 'no data';
-    return res.status(200).json(output);
-  }
-
-  output.success = true;
-  output.data = rows;
-  res.json(output);
-});
-//<<< get diet record by member sid
-
 // >>> add exercise record
-// TODO: unfinishedr
 router.post('/add-record', async (req, res, next) => {
-  // res.json({ a: 123 });
   let mID = 5;
-  // console.log(req.body);
-  const { sid, quantity, sets, reps, date } = req.body;
-  // console.log(sid, quantity, sets, reps, date);
+  const { typeID, quantity, sets, reps, date } = req.body;
 
   const sql = `INSERT INTO record_exercise_record( member_sid ,  exe_type_sid ,  weight ,  sets ,  reps ,  exe_date ) VALUES ( ? , ? , ? , ? , ? , ? )`;
   let result;
-  [result] = await db.query(sql, [mID, sid, quantity, sets, reps, date]);
-  console.log(result);
+  [result] = await db.query(sql, [mID, typeID, quantity, sets, reps, date]);
   res.json({
     result,
     postData: req.body,
   });
 });
 // <<< add exercise record
+
+// >>> delete exercise record for one centain date
+router.delete('/delete-record', async (req, res, next) => {
+  // FIXME:temporate member sid
+  let mID = 5;
+  const output = {
+    success: false,
+    error: '',
+    result: null,
+  };
+
+  const { date } = req.body;
+  console.log(date);
+  if (!date) {
+    output.error = 'wrong date';
+    return res.status(200).json(output);
+  }
+
+  const sql = `DELETE FROM record_exercise_record
+  WHERE exe_date='${date}' AND member_sid=${mID}`;
+  [output.result] = await db.query(sql);
+
+  output.success = true;
+  res.json(output);
+});
+// <<< delete exercise record for one centain date
 
 module.exports = router;
