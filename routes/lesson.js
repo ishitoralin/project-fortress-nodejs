@@ -12,6 +12,17 @@ router.get('/tags', async (req, res) => {
 });
 
 router.get('/categories', async (req, res) => {
+  const { id } = req.query;
+
+  if (!isNaN(parseInt(id))) {
+    const categorySql = `SELECT * FROM c_l_category WHERE sid = ${id}`;
+    const [[category]] = await db.query(categorySql);
+
+    const coachSql = `SELECT c.* FROM c_l_category ct JOIN c_l_coachs c WHERE c.sid IN (SELECT DISTINCT coach_sid FROM c_l_lessons WHERE category_sid = ${id} ) AND ct.sid = ${id}`;
+    const [coachs] = await db.query(coachSql);
+    return res.json({ ...category, coachs });
+  }
+
   const sql = 'SELECT sid FROM c_l_category';
   const [datas] = await db.query(sql);
   const categories = datas.map((data) => data.sid);
@@ -98,6 +109,7 @@ router.get('/', async (req, res) => {
   const [lessons_noTags] = await db.query(sql, queryObj.queryItems);
   const lessons = await getLessonTags(lessons_noTags);
 
+  // handle time format
   lessons.forEach(
     (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
   );
