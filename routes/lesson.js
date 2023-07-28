@@ -4,6 +4,12 @@ const express = require('express');
 
 const router = express.Router();
 
+router.get('/banners', async (req, res) => {
+  const sql = `SELECT * FROM c_l_category LIMIT 5`;
+  const [data] = await db.query(sql);
+  res.json(data);
+});
+
 router.get('/tags', async (req, res) => {
   const sql = `SELECT name FROM c_l_tags ORDER BY sid`;
   const [datas] = await db.query(sql);
