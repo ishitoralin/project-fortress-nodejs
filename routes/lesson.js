@@ -11,6 +11,13 @@ router.get('/tags', async (req, res) => {
   res.json(tags);
 });
 
+router.get('/categories', async (req, res) => {
+  const sql = 'SELECT sid FROM c_l_category';
+  const [datas] = await db.query(sql);
+  const categories = datas.map((data) => data.sid);
+  res.json(categories);
+});
+
 router.get('/', async (req, res) => {
   const baseSql = `
     SELECT l.*, c.nickname, ct.img, ct.img_base64 FROM c_l_lessons l 
@@ -24,7 +31,8 @@ router.get('/', async (req, res) => {
   };
 
   // return res.json(req.query);
-  const { location, keyword, tags, dateAfter, dateBefore, price } = req.query;
+  const { location, keyword, tags, dateAfter, dateBefore, price, category } =
+    req.query;
 
   const location_sid = location ? await getLocationSid(location) : -1;
   if (location_sid !== -1) {
@@ -72,6 +80,11 @@ router.get('/', async (req, res) => {
     );
   }
 
+  if (category && !isNaN(parseInt(category))) {
+    queryObj.sqlList.push(`l.category_sid = ?`);
+    queryObj.queryItems.push(category);
+  }
+
   // splice sql syntax
   const spliceSql = queryObj.sqlList.reduce(
     (prevSql, nextSql) => `${prevSql} ${nextSql} AND`,
@@ -81,8 +94,6 @@ router.get('/', async (req, res) => {
   // remove last AND
   const sql =
     queryObj.sqlList.length === 0 ? spliceSql : spliceSql.slice(0, -4);
-
-  console.log(sql)
 
   const [lessons_noTags] = await db.query(sql, queryObj.queryItems);
   const lessons = await getLessonTags(lessons_noTags);
