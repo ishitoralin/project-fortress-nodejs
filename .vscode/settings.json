@@ -1,4 +1,11 @@
 {
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#006233",
+        "titleBar.activeBackground": "#00bc61",
+        "titleBar.activeForeground": "#FBFAFA"
+    },
+
+
     "todohighlight.defaultStyle": {},
     "todohighlight.exclude": [
         "**/node_modules/**",

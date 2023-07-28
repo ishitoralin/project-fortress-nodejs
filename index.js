@@ -22,7 +22,12 @@ const exerciseRecordRoutes = require(__dirname +
 require('dotenv').config();
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(
+  cors({
+    origin: ['http://localhost:3000', 'http://localhost:9010'],
+    credentials: true,
+  })
+);
 app.use(morgan('dev'));
 //:method :url :status :response-time ms - :res[content-length]
 
