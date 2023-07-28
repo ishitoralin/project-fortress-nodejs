@@ -2,6 +2,7 @@ const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
 const { protect } = require('../modules/auth');
+const upload = require('../modules/img-uploads.js');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
 //保護用的middleware 同時能decode token 取得 user 丟到req.locals.user 往後面傳
@@ -54,13 +55,21 @@ router
 
     const { sid } = res.locals.user;
     const sql = `UPDATE member SET 
-    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = 50;`;
-    // mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
+    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
     let rows;
     rows = await db.query(sql, [mobile, birth, address, sex]);
     console.log(rows[0].affectedRows);
     res.status(200).json({ message: '修改成功' });
     // .json({ code: 200, data: rows[0], message: '有資料' });
+  })
+  //上傳單張
+  .patch('/icon', upload.single('avatar'), async (req, res, next) => {
+    console.log(req.file);
+    res.status(200).json({
+      code: 200,
+      filename: req.file.filename,
+      message: '更新照片成功',
+    });
   })
   .get('/member-favorite-courses', async (req, res, next) => {})
   .delete('/member-favorite-courses', async (req, res, next) => {})

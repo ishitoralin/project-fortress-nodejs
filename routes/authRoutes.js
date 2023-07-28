@@ -9,9 +9,9 @@ require('dotenv').config();
 const router = express.Router();
 
 router
-  .get('/test', (req, res) => {
+  /*   .get('/test', (req, res) => {
     res.json({ data: 123 });
-  })
+  }) */
   .get('/check-auth', getUser, (req, res, next) => {
     console.log('check-auth work');
     console.log(res?.locals?.user);
@@ -107,9 +107,7 @@ router
       res.cookie('g4RefreshToken', refreshToken);
 
       //放入accessToken進json 前端接住丟進state內
-      user.hero_icon = `http://localhost:${process.env.PORT}/imgs/member/${
-        user.hero_icon === 'null' ? '' : user.hero_icon
-      }`;
+      user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
       return res.status(200).json({
         code: 200,
         accessToken,
@@ -117,7 +115,10 @@ router
           id: user.sid,
           name: user.name,
           role: user.role_sid,
-          icon: user.hero_icon,
+          icon:
+            user.hero_icon === null
+              ? ''
+              : `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`,
         },
         message: '登入成功',
       });
