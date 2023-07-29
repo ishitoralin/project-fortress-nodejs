@@ -6,16 +6,22 @@ const base64Encode = (filePath) => {
   return new Buffer.from(bitmap).toString('base64');
 };
 
-fs.readdir('./lessons-small-img', (error, filenames) => {
+const imgPath = './public/imgs/coach/coachs-small-img';
+const imgExtend = 'jpg';
+const fileNameWrited = './coachs-img-base64.json';
+
+fs.readdir(imgPath, (error, filenames) => {
   if (error) return console.log(error);
 
-  const datas = filenames.map((file) => ({
-    imgName: file.slice(0, -10) + '.jpg',
+  const datas = filenames.map((filename) => ({
+    // remove suffix '-small.jpg' and add extend
+    imgName: filename.slice(0, -10) + `.${imgExtend}`,
     base64Text:
-      'data:image/jpg;base64,' + base64Encode(`./lessons-small-img/${file}`),
+      `data:image/${imgExtend};base64,` +
+      base64Encode(`${imgPath}/${filename}`),
   }));
 
   const content = JSON.stringify(datas);
 
-  fs.writeFile('./base64data.json', content, (error) => console.log(error));
+  fs.writeFile(fileNameWrited, content, (error) => console.log(error));
 });
