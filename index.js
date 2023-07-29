@@ -36,6 +36,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/lesson', require(__dirname + '/routes/lesson'));
+app.use('/coach', require(__dirname + '/routes/coach'));
+
+
 //登入用
 app.use('/api/auth', authRouter);
 //寄信用

@@ -48,8 +48,16 @@ router.get('/', async (req, res) => {
   };
 
   // return res.json(req.query);
-  const { location, keyword, tags, dateAfter, dateBefore, price, category } =
-    req.query;
+  const {
+    location,
+    keyword,
+    tags,
+    dateAfter,
+    dateBefore,
+    price,
+    category,
+    coach,
+  } = req.query;
 
   const location_sid = location ? await getLocationSid(location) : -1;
   if (location_sid !== -1) {
@@ -100,6 +108,10 @@ router.get('/', async (req, res) => {
   if (category && !isNaN(parseInt(category))) {
     queryObj.sqlList.push(`l.category_sid = ?`);
     queryObj.queryItems.push(category);
+  }
+
+  if (coach && !isNaN(parseInt(coach))) {
+    queryObj.sqlList.push(`l.coach_sid = ${parseInt(coach)}`);
   }
 
   // splice sql syntax
