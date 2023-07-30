@@ -9,6 +9,8 @@ const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
 const cart = require(__dirname + '/routes/cart.js');
+const SCeditquantity = require(__dirname + '/routes/SCeditquantity');
+const SCadd = require(__dirname + '/routes/SCadd');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -16,7 +18,6 @@ const foodRoutes = require(__dirname + '/routes/record/foodType.js');
 const dietRecordRoutes = require(__dirname + '/routes/record/dietRecord.js');
 const exerciseRecordRoutes = require(__dirname +
   '/routes/record/exerciseRecord.js');
-
 // <<< for sean
 
 require('dotenv').config();
@@ -41,14 +42,10 @@ app.use('/api/auth', authRouter);
 //寄信用
 app.use('/api/email', emailRouter);
 // const cart = );
-
 // shoppingcart use
 app.use('/cart', cart);
-app.get('/qstest', (req, res) => {
-  res.json(req.query);
-});
-
-// show order list datas to shopping cart and update api (method patch)
+app.use('/SCeditquantity', SCeditquantity); // TODO 前端尚未寫好送body update api (method patch)
+app.use('/SCadd', SCadd);
 
 // add products from products pages and lesson pages (to database (order_cart))
 
