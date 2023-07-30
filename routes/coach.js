@@ -3,6 +3,13 @@ const express = require('express');
 
 const router = express.Router();
 
+router.get('/all', async (req, res) => {
+  const [data] = await db.query(
+    'SELECT c.*, l.name as location FROM c_l_coachs c JOIN c_l_location l ON c.location_sid = l.sid'
+  );
+  res.json(data);
+});
+
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   if (isNaN(parseInt(id))) return res.json({ message: 'Invalid params' });
