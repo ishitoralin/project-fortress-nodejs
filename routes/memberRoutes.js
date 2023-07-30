@@ -64,7 +64,11 @@ router
   })
   //上傳單張
   .patch('/icon', upload.single('avatar'), async (req, res, next) => {
-    console.log(req.file);
+    const { sid } = res.locals.user;
+    console.log(req.file.filename);
+    let sql = `UPDATE member SET hero_icon = '${req.file.filename}' WHERE sid=${sid}`;
+    console.log(sql);
+    await db.query(sql);
     res.status(200).json({
       code: 200,
       filename: req.file.filename,
