@@ -13,7 +13,7 @@ router.get('/all', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   if (isNaN(parseInt(id))) return res.json({ message: 'Invalid params' });
-  const sql = `SELECT * FROM c_l_coachs WHERE sid = ${id}`;
+  const sql = `SELECT c.*, l.name as location FROM c_l_coachs c JOIN c_l_location l ON c.location_sid = l.sid WHERE c.sid = ${id}`;
   const [[data]] = await db.query(sql);
 
   res.json(data);

@@ -37,9 +37,10 @@ router.get('/categories', async (req, res) => {
 
 router.get('/', async (req, res) => {
   const baseSql = `
-    SELECT l.*, c.nickname, ct.img, ct.img_base64 FROM c_l_lessons l 
+    SELECT l.*, c.nickname, ct.img, ct.img_base64, lo.name as location FROM c_l_lessons l 
     JOIN c_l_coachs c ON l.coach_sid = c.sid 
     JOIN c_l_category ct ON l.category_sid = ct.sid
+    JOIN c_l_location lo ON l.location_sid = lo.sid
   `;
 
   const queryObj = {
