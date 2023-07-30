@@ -71,11 +71,69 @@ router
       message: '更新照片成功',
     });
   })
-  .get('/member-favorite-courses', async (req, res, next) => {})
-  .delete('/member-favorite-courses', async (req, res, next) => {})
+  //取得會員最愛課程
+  .get('/member-favorite-courses', async (req, res, next) => {
+    const { sid } = res.locals.user;
+    let sql = `SELECT mfl.sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
+LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
+LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
+LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
+WHERE mfl.member_sid = ${sid}`;
+
+    let rows;
+    [rows] = await db.query(sql);
+    if (rows.length > 0) {
+      rows = rows.map((el) => {
+        return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
+      });
+      return res.status(200).json({ code: 200, data: rows, message: '有資料' });
+    }
+
+    return res.status(404).json({ code: 404, message: '沒有資料' });
+  })
+  //新增會員最愛課程
+  .post('/member-favorite-courses', async (req, res, next) => {
+    const { sid } = res.locals.user;
+    const { lsid } = req.body;
+    let sql = `
+  INSERT INTO member_favorite_lessons( member_sid  , lesson_sid) 
+  VALUES ( ${sid}   , ${lsid}) `;
+    try {
+      await db.query(sql);
+      res.status(200).json({ code: 200, message: '新增最愛課程成功' });
+    } catch (error) {
+      res.status(404).json({ code: 404, message: '新增最愛課程失敗' });
+    }
+  })
+  //刪除會員最愛課程
+  .delete('/member-favorite-courses', async (req, res, next) => {
+    const { sid } = req.body;
+    let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.sid = ${sid}`;
+    try {
+      const rows = await db.query(sql);
+      if (!rows[0]['affectedRows']) {
+        throw new Error('failed');
+      }
+      res.status(200).json({ code: 200, message: '刪除最愛課程成功' });
+    } catch (error) {
+      res.status(404).json({ code: 404, message: '刪除最愛課程失敗' });
+    }
+  })
   .get('/member-favorite-products', async (req, res, next) => {
-    const { id } = res.locals.user;
-    let sql = `SELECT CASE
+    /* let output = {
+      redirect: '',
+      totalRows: 0,
+      perPage: 12,
+      totalPages: 0,
+      page: 1,
+    };
+    output.page = req.query.page ? parseInt(req.query.page) : 1;
+    if (!output.page || output.page < 1) {
+      output.redirect = req.baseUrl;
+      return res.status(404).json({ code: 404, output, message: '沒有資料' });
+    } */
+    const { sid } = res.locals.user;
+    let sql = `SELECT mfp.sid , CASE
     WHEN mfp.category_sid = 1 THEN pn.product_name
     WHEN mfp.category_sid = 2 THEN fn.food_name
     WHEN mfp.category_sid = 3 THEN en.equipment_name
@@ -94,17 +152,47 @@ FROM member_favorite_products  AS mfp
 LEFT JOIN product_name AS pn ON mfp.product_sid = pn.sid AND mfp.category_sid = 1
 LEFT JOIN food_name AS fn ON mfp.product_sid = fn.sid AND mfp.category_sid = 2
 LEFT JOIN equipment_name AS en ON mfp.product_sid = en.sid AND mfp.category_sid = 3
-WHERE mfp.member_sid =${id}
+WHERE mfp.member_sid =${sid}
 `;
     let rows;
     [rows] = await db.query(sql);
     if (rows.length > 0) {
-      return res.status(200).json({ code: 200, rows, message: '有資料' });
+      rows = rows.map((el) => {
+        return { ...el, picture: el.picture.split(',')[0] };
+      });
+      return res.status(200).json({ code: 200, data: rows, message: '有資料' });
     }
 
     return res.status(404).json({ code: 404, message: '沒有資料' });
   })
-  .delete('/member-favorite-products', (req, res, next) => {})
+  //新增最愛商品
+  .post('/member-favorite-products', async (req, res, next) => {
+    const { sid } = res.locals.user;
+    const { psid, csid } = req.body;
+    let sql = `
+  INSERT INTO member_favorite_products( member_sid , category_sid , product_sid) 
+  VALUES ( ${sid}  , ${csid} , ${psid}) `;
+    try {
+      await db.query(sql);
+      res.status(200).json({ code: 200, message: '新增最愛商品成功' });
+    } catch (error) {
+      res.status(404).json({ code: 404, message: '新增最愛商品失敗' });
+    }
+  })
+  //刪除最愛商品
+  .delete('/member-favorite-products', async (req, res, next) => {
+    const { sid } = req.body;
+    let sql = `DELETE FROM member_favorite_products WHERE member_favorite_products.sid = ${sid}`;
+    try {
+      const rows = await db.query(sql);
+      if (!rows[0]['affectedRows']) {
+        throw new Error('failed');
+      }
+      res.status(200).json({ code: 200, message: '刪除最愛商品成功' });
+    } catch (error) {
+      res.status(404).json({ code: 404, message: '刪除最愛商品失敗' });
+    }
+  })
 
   .use('*', (req, res) => {
     res.status(404).json({ code: 404, message: '錯誤的member routes' });
