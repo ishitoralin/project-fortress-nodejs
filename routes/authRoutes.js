@@ -104,7 +104,9 @@ router
         { expiresIn: '60d' }
       );
       //放入refreshToken進httponly cookie
-      res.cookie('g4RefreshToken', refreshToken);
+      res.cookie('g4RefreshToken', refreshToken, {
+        maxAge: 5184000000,
+      });
 
       //放入accessToken進json 前端接住丟進state內
       user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
