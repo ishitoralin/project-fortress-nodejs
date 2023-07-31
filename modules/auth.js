@@ -31,9 +31,9 @@ exports.getUser = async (req, res, next) => {
       decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       //拿到user把user送下去
       res.locals.user = decoded;
-      return next();
     }
   } catch (error) {
     console.log(error);
   }
+  next();
 };

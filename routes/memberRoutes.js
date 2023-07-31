@@ -86,6 +86,19 @@ router
       rows: [],
     };
     const { sid } = res.locals.user;
+
+    /* 
+    let where = ' WHERE 1 ';
+    let keyword;
+    if (req.query.keyword) {
+      keyword = db.escape('%' + req.query.keyword + '%');
+      where += ` AND 
+       ${category}_name LIKE ${keyword} 
+      `;
+    }
+    const t_sql = `SELECT COUNT(1) totalRows FROM ${category}_name ${where}`;
+    const [[{ totalRows }]] = await db.query(t_sql);
+    */
     let sql = `SELECT mfl.sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
 LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
 LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
@@ -103,6 +116,57 @@ WHERE mfl.member_sid = ${sid}`;
     }
 
     return res.status(200).json({ code: 200, message: '沒有資料' });
+  })
+  .get('/member-favorite-courses2', async (req, res, next) => {
+    let output = {
+      redirect: '',
+      totalRows: 0,
+      perPage: 12,
+      totalPages: 0,
+      page: 1,
+      rows: [],
+    };
+    const { sid } = res.locals.user;
+
+    let where = ` WHERE member_sid = ${sid} `;
+    let keyword;
+    if (req.query.keyword) {
+      keyword = db.escape('%' + req.query.keyword + '%');
+      where += ` AND 
+       name LIKE ${keyword} OR nickname LIKE ${keyword}
+      `;
+    }
+    const t_sql = `SELECT COUNT(1) totalRows FROM  member_favorite_lessons ${where}`;
+    const [[{ totalRows }]] = await db.query(t_sql);
+    if (totalRows) {
+      output.totalRows = totalRows;
+      output.totalPages = Math.ceil(totalRows / output.perPage);
+      if (output.page > output.totalPages) {
+        output.redirect =
+          req.baseUrl +
+          '?page=' +
+          output.totalPages +
+          `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
+        return res.status(200).json({ code: 200, output, message: '沒有資料' });
+      }
+      let sql = `SELECT mfl.sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
+      LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
+      LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
+      LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
+      WHERE mfl.member_sid = ${sid}`;
+
+      let rows;
+      [rows] = await db.query(sql);
+      if (rows.length > 0) {
+        rows = rows.map((el) => {
+          return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
+        });
+        output.rows = rows;
+        return res.status(200).json({ code: 200, output, message: '有資料' });
+      }
+
+      return res.status(200).json({ code: 200, message: '沒有資料' });
+    }
   })
   //新增會員最愛課程
   .post('/member-favorite-courses', async (req, res, next) => {
