@@ -11,14 +11,14 @@ exports.protect = async (req, res, next) => {
     try {
       decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       res.locals.user = decoded;
-      console.log('from protect:', auth, '\n', 'decoded:', res.locals.user);
+      // console.log('from protect:', auth, '\n', 'decoded:', res.locals.user);
     } catch (error) {
-      return res.status(401);
+      return res.status(401).end();
     }
     next();
   } else {
     //沒拿到accesstoken則直接回傳401,中斷操作
-    return res.status(401);
+    return res.status(401).end();
   }
 };
 exports.getUser = async (req, res, next) => {
@@ -33,8 +33,7 @@ exports.getUser = async (req, res, next) => {
       res.locals.user = decoded;
       return next();
     }
-    return res.status(401).end();
   } catch (error) {
-    return res.status(401).end();
+    console.log(error);
   }
 };
