@@ -1,6 +1,7 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
 const express = require('express');
+const { getUser } = require(__dirname + '/../modules/auth.js');
 
 const router = express.Router();
 
@@ -35,7 +36,9 @@ router.get('/categories', async (req, res) => {
   res.json(categories);
 });
 
-router.get('/', async (req, res) => {
+router.get('/', getUser, async (req, res) => {
+  const sid = res.locals.user?.sid || null;
+
   const baseSql = `
     SELECT l.*, c.nickname, ct.img, ct.img_base64, lo.name as location FROM c_l_lessons l 
     JOIN c_l_coachs c ON l.coach_sid = c.sid 
@@ -126,9 +129,17 @@ router.get('/', async (req, res) => {
     queryObj.sqlList.length === 0 ? spliceSql : spliceSql.slice(0, -4);
 
   const [lessons_noTags] = await db.query(sql, queryObj.queryItems);
-  const lessons = await getLessonTags(lessons_noTags);
+  const lessons = await addLessonTags(lessons_noTags);
 
-  // handle time format
+  // add save column for lesson
+  if (sid) {
+    const saveLessonsId = await getSavesLessons(sid);
+    lessons.forEach(
+      (lesson) => (lesson.save = saveLessonsId.has(lesson.sid) ? true : false)
+    );
+  }
+
+  // format lesson time
   lessons.forEach(
     (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
   );
@@ -142,7 +153,7 @@ const getLocationSid = async (location) => {
   return datas.length !== 0 ? datas[0].sid : 1;
 };
 
-const getLessonTags = async (lessons) => {
+const addLessonTags = async (lessons) => {
   return await Promise.all(
     lessons.map(async (lesson) => {
       const getTagsSql = `
@@ -154,6 +165,13 @@ const getLessonTags = async (lessons) => {
       return { ...lesson, tags: tags.map((tag) => tag.name) };
     })
   );
+};
+
+const getSavesLessons = async (sid) => {
+  if (isNaN(parseInt(sid))) throw new Error('Invalid member id');
+  const sql = `SELECT lesson_sid FROM member_favorite_lessons WHERE member_sid = ${sid}`;
+  const [datas] = await db.query(sql);
+  return new Set(datas.map((data) => data.lesson_sid));
 };
 
 module.exports = router;
