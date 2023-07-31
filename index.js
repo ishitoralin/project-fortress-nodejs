@@ -48,10 +48,7 @@ app.use('/cart', cart);
 app.use('/SCeditquantity', SCeditquantity);
 app.use('/SCadd', SCadd);
 // TODO 問QT 前端怎麼傳member sid去後端
-// add products from products pages and lesson pages (to database (order_cart))
-// 
 
-//  (products parts)
 // button (add products to shoppingcart and database,(2 places (detail pages(can choose quantity) and  product list page(set quantity as 1))))
 app.use('/SCdelete', SCdelete);
 // button for deleting all items at once
