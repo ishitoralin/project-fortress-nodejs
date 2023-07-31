@@ -15,7 +15,7 @@ router
     console.log(res.locals.user);
     const { sid } = res.locals.user;
     if (!sid) {
-      return res.status(404).json({ code: 404, message: '沒有資料' });
+      return res.status(200).json({ code: 200, message: '沒有資料' });
     }
 
     let sql = `SELECT 
@@ -34,7 +34,7 @@ router
         .status(200)
         .json({ code: 200, data: rows[0], message: '有資料' });
     } else {
-      return res.status(404).json({ code: 404, message: '沒有資料' });
+      return res.status(200).json({ code: 200, message: '沒有資料' });
     }
   })
   //修改指定會員資料
@@ -77,6 +77,14 @@ router
   })
   //取得會員最愛課程
   .get('/member-favorite-courses', async (req, res, next) => {
+    let output = {
+      redirect: '',
+      totalRows: 0,
+      perPage: 12,
+      totalPages: 0,
+      page: 1,
+      rows: [],
+    };
     const { sid } = res.locals.user;
     let sql = `SELECT mfl.sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
 LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
@@ -90,10 +98,11 @@ WHERE mfl.member_sid = ${sid}`;
       rows = rows.map((el) => {
         return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
       });
-      return res.status(200).json({ code: 200, data: rows, message: '有資料' });
+      output.rows = rows;
+      return res.status(200).json({ code: 200, output, message: '有資料' });
     }
 
-    return res.status(404).json({ code: 404, message: '沒有資料' });
+    return res.status(200).json({ code: 200, message: '沒有資料' });
   })
   //新增會員最愛課程
   .post('/member-favorite-courses', async (req, res, next) => {
@@ -162,12 +171,12 @@ WHERE mfp.member_sid =${sid}
     [rows] = await db.query(sql);
     if (rows.length > 0) {
       rows = rows.map((el) => {
-        return { ...el, picture: el.picture.split(',')[0] };
+        return { ...el, picture: el.picture?.split(',')[0] };
       });
       return res.status(200).json({ code: 200, data: rows, message: '有資料' });
     }
 
-    return res.status(404).json({ code: 404, message: '沒有資料' });
+    return res.status(200).json({ code: 200, message: '沒有資料' });
   })
   //新增最愛商品
   .post('/member-favorite-products', async (req, res, next) => {
