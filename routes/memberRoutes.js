@@ -121,22 +121,32 @@ WHERE mfl.member_sid = ${sid}`;
     let output = {
       redirect: '',
       totalRows: 0,
-      perPage: 12,
+      perPage: 6,
       totalPages: 0,
       page: 1,
       rows: [],
     };
-    const { sid } = res.locals.user;
+    output.page = req.query.page ? parseInt(req.query.page) : 1;
+    if (!output.page || output.page < 1) {
+      output.redirect = req.baseUrl;
+      return res.status(404).json({ code: 200, output, message: '沒有資料' });
+    }
+    const { sid: mid } = res.locals.user;
 
-    let where = ` WHERE member_sid = ${sid} `;
+    let where = ` WHERE mfl.member_sid = ${mid} `;
     let keyword;
     if (req.query.keyword) {
       keyword = db.escape('%' + req.query.keyword + '%');
       where += ` AND 
-       name LIKE ${keyword} OR nickname LIKE ${keyword}
+      cll.name LIKE ${keyword} OR nickname LIKE ${keyword}
       `;
     }
-    const t_sql = `SELECT COUNT(1) totalRows FROM  member_favorite_lessons ${where}`;
+    const t_sql = `
+    SELECT COUNT(1) totalRows FROM  member_favorite_lessons AS mfl 
+    LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
+    LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
+    LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
+    ${where}`;
     const [[{ totalRows }]] = await db.query(t_sql);
     if (totalRows) {
       output.totalRows = totalRows;
@@ -153,8 +163,8 @@ WHERE mfl.member_sid = ${sid}`;
       LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
       LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
       LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
-      WHERE mfl.member_sid = ${sid}`;
-
+      ${where} LIMIT ${output.perPage * (output.page - 1)}, ${output.perPage}`;
+      console.log(output.page);
       let rows;
       [rows] = await db.query(sql);
       if (rows.length > 0) {
@@ -184,8 +194,10 @@ WHERE mfl.member_sid = ${sid}`;
   })
   //刪除會員最愛課程
   .delete('/member-favorite-courses', async (req, res, next) => {
-    const { sid } = req.body;
-    let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.sid = ${sid}`;
+    const { sid: lid } = req.body;
+    const { sid: mid } = res.locals.user;
+    console.log(lid, mid);
+    let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.lesson_sid = ${lid} AND member_favorite_lessons.member_sid = ${mid}`;
     try {
       const rows = await db.query(sql);
       if (!rows[0]['affectedRows']) {
@@ -258,8 +270,10 @@ WHERE mfp.member_sid =${sid}
   })
   //刪除最愛商品
   .delete('/member-favorite-products', async (req, res, next) => {
-    const { sid } = req.body;
-    let sql = `DELETE FROM member_favorite_products WHERE member_favorite_products.sid = ${sid}`;
+    const { pid, cid } = req.body;
+    const { sid: mid } = res.locals.user;
+    console.log(pid, cid, mid);
+    let sql = `DELETE FROM member_favorite_products WHERE ( member_favorite_products.product_sid = ${pid} ) AND ( member_favorite_products.category_sid=${cid} ) AND  ( member_favorite_products.member_sid=${mid} )`;
     try {
       const rows = await db.query(sql);
       if (!rows[0]['affectedRows']) {
