@@ -164,7 +164,6 @@ WHERE mfl.member_sid = ${sid}`;
       LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
       LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
       ${where} LIMIT ${output.perPage * (output.page - 1)}, ${output.perPage}`;
-      console.log(output.page);
       let rows;
       [rows] = await db.query(sql);
       if (rows.length > 0) {
