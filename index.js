@@ -9,6 +9,10 @@ const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
 const cart = require(__dirname + '/routes/cart.js');
+const SCeditquantity = require(__dirname + '/routes/SCeditquantity');
+const SCadd = require(__dirname + '/routes/SCadd');
+const SCdelete = require(__dirname + '/routes/SCdelete');
+const SCrecommanded = require(__dirname + '/routes/SCrecommanded');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -16,7 +20,6 @@ const foodRoutes = require(__dirname + '/routes/record/foodType.js');
 const dietRecordRoutes = require(__dirname + '/routes/record/dietRecord.js');
 const exerciseRecordRoutes = require(__dirname +
   '/routes/record/exerciseRecord.js');
-
 // <<< for sean
 
 require('dotenv').config();
@@ -44,25 +47,20 @@ app.use('/api/auth', authRouter);
 //寄信用
 app.use('/api/email', emailRouter);
 // const cart = );
-
 // shoppingcart use
 app.use('/cart', cart);
-app.get('/qstest', (req, res) => {
-  res.json(req.query);
-});
+app.use('/SCeditquantity', SCeditquantity);
+app.use('/SCadd', SCadd);
+// TODO 問QT 前端怎麼傳member sid去後端
 
-// show order list datas to shopping cart and update api (method patch)
-
-// add products from products pages and lesson pages (to database (order_cart))
-
-//  (products parts)
 // button (add products to shoppingcart and database,(2 places (detail pages(can choose quantity) and  product list page(set quantity as 1))))
-
+app.use('/SCdelete', SCdelete);
 // button for deleting all items at once
 
 // send datas to database (order_main) when user click the confirm button then replace the page to secondpage
 // loaging data (order_main) then show in the secondpage
 
+app.use('/SCrecommanded', SCrecommanded);
 // show recommanded products datas to shopping cart
 // show popular products datas to shopping cart
 // show recommanded lesson datas to shopping cart

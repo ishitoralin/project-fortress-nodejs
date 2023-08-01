@@ -1,13 +1,9 @@
 const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
-const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
-// router.get('/test', (req, res) => {
-//   res.status(200).json({ a: 1 });
-// });
-
-// router.get('/cart', ({ query: { sid } }, res) => {
+// 從資料庫抓取資料，購物車顯示商品
+// postman用get
 router.get('/:sid', async (req, res) => {
   const sid = req.params?.sid;
   if (!sid || isNaN(sid)) {
@@ -57,8 +53,8 @@ WHERE
 
   let rows;
   [rows] = await db.query(query, [sid]);
-
   const data = rows;
+  console.log(data)
   res.status(200).json({ code: 200, data });
 });
 
