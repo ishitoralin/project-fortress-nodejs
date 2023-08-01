@@ -35,7 +35,7 @@ router.get('/:sid', async (req, res) => {
       WHEN oc.products_type_sid = 1 THEN pn.picture
       WHEN oc.products_type_sid = 2 THEN fn.picture
       WHEN oc.products_type_sid = 3 THEN en.picture
-      WHEN oc.products_type_sid = 4 THEN ln.category_sid
+      WHEN oc.products_type_sid = 4 THEN ln.img
       ELSE NULL
   END AS picture
 FROM
@@ -46,7 +46,10 @@ FROM
   AND oc.item_sid = fn.sid
   LEFT JOIN equipment_name AS en ON oc.products_type_sid = 3
   AND oc.item_sid = en.sid
-  LEFT JOIN c_l_lessons AS ln ON oc.products_type_sid = 4
+  LEFT JOIN (SELECT l.* , c.img
+  FROM c_l_lessons AS l
+  JOIN c_l_category AS c
+  WHERE l.category_sid = c.sid) AS ln ON oc.products_type_sid = 4
   AND oc.item_sid = ln.sid
 WHERE
   oc.member_sid = 5;`;
@@ -54,7 +57,7 @@ WHERE
   let rows;
   [rows] = await db.query(query, [sid]);
   const data = rows;
-  console.log(data)
+  console.log(data);
   res.status(200).json({ code: 200, data });
 });
 
