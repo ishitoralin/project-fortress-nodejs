@@ -128,7 +128,8 @@ WHERE mfl.member_sid = ${sid}`;
     };
     output.page = req.query.page ? parseInt(req.query.page) : 1;
     if (!output.page || output.page < 1) {
-      output.redirect = req.baseUrl;
+      output.redirect = req.baseUrl + req.path;
+
       return res.status(404).json({ code: 200, output, message: '沒有資料' });
     }
     const { sid: mid } = res.locals.user;
@@ -154,12 +155,13 @@ WHERE mfl.member_sid = ${sid}`;
       if (output.page > output.totalPages) {
         output.redirect =
           req.baseUrl +
+          req.path +
           '?page=' +
           output.totalPages +
           `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
         return res.status(200).json({ code: 200, output, message: '沒有資料' });
       }
-      let sql = `SELECT mfl.sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
+      let sql = `SELECT  mfl.lesson_sid AS sid ,mfl.member_sid , cll.name,clcoach.nickname ,cll.time ,cll.period,cll.price,clc.img FROM member_favorite_lessons AS mfl 
       LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
       LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
       LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
