@@ -95,6 +95,7 @@ router
     sql = ` SELECT p.sid,
     p.${category}_name AS name,
     p.category_id,
+    ${req.params.cid} AS parent_id,
     p.price,
     p.picture,
     p.created_at FROM ${category}_name AS p;`;

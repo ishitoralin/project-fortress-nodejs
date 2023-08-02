@@ -3,16 +3,15 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
+const { v4 } = require('uuid');
 require('dayjs/locale/zh-tw');
 const { getUser } = require('../modules/auth');
 require('dotenv').config();
 const router = express.Router();
 
 router
-  /*   .get('/test', (req, res) => {
-    res.json({ data: 123 });
-  }) */
   .get('/check-auth', getUser, (req, res, next) => {
+    //#region 喚起前端初次載入app時refresh token的logic
     console.log('check-auth work');
     console.log(res?.locals?.user);
     if (res?.locals?.user) {
@@ -20,14 +19,19 @@ router
     } else {
       return res.send(401);
     }
+    //#endregion
   })
   .get('/logout', (req, res, next) => {
+    //#region 登出 刪除 refresh cookie
     res
       .status(200)
       .clearCookie('g4RefreshToken')
       .json({ code: 200, message: '登出成功' });
+    //#endregion
   })
   .get('/refresh-token', async (req, res, next) => {
+    //#region 用g4RefreshToken cookies 拿到 refresh token 並進db找到對應使用者資訊 並回傳accessToken和其他資訊 讓前端設定auth state
+
     const refreshCookie = req.cookies?.g4RefreshToken;
     if (refreshCookie) {
       //解密refresh cookie 內的 token
@@ -74,7 +78,9 @@ router
     } else {
       return res.send(401);
     }
+    //#endregion
   })
+
   .post('/login', async (req, res) => {
     const { email, password } = req.body;
     let rows;
@@ -104,7 +110,9 @@ router
         { expiresIn: '60d' }
       );
       //放入refreshToken進httponly cookie
-      res.cookie('g4RefreshToken', refreshToken);
+      res.cookie('g4RefreshToken', refreshToken, {
+        maxAge: 5184000000,
+      });
 
       //放入accessToken進json 前端接住丟進state內
       user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
@@ -125,5 +133,31 @@ router
     }
     //TODO
     res.send(401);
+  })
+  .post('/sign-up', async (req, res) => {
+    const { name, email, password } = req.body;
+    //#region 信箱duplicate check , duplicate 的話回應錯誤
+    const [[emailCheck]] = await db.query(
+      `SELECT COUNT(1) FROM member WHERE member.email = ? `,
+      [email]
+    );
+    console.log(emailCheck?.['COUNT(1)'] ? '帳號重複' : '');
+
+    if (emailCheck?.['COUNT(1)'] > 0) {
+      return res.status(200).json({ code: 200, message: '信箱已註冊' });
+    }
+    //#endregion
+    //#region 檢查過後，註冊信箱，往SQL插入資料
+    let sql = `
+    INSERT INTO member 
+    (sid,name ,password,email,sex_sid,active,created_at) values
+    ( ? , ? , ? , ? , 3 , 1 , NOW() )`;
+    const hashPassword = await bcrypt.hash(password, 10);
+    const result = await db.query(sql, [v4(), name, hashPassword, email]);
+    if (result[0]?.affectedRows) {
+      return res.status(200).json({ code: 200, message: '註冊成功' });
+    }
+    //#endregion
+    res.status(200).json({ code: 200, message: '註冊失敗' });
   });
 module.exports = router;
