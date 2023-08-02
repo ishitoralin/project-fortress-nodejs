@@ -3,6 +3,8 @@ const db = require(__dirname + '/../../modules/connectDB.js');
 const router = express.Router();
 const moment = require('moment-timezone');
 
+const { protect } = require(__dirname + '/../../modules/auth.js');
+router.use(protect);
 // ===============================================================
 // === exercise ==================================================
 // ===============================================================
@@ -10,10 +12,10 @@ const moment = require('moment-timezone');
 router.get(
   '/exercise-record/:start?/:end?',
   // >>> member middleware
-  function (req, res, next) {
-    res.locals.memberId = 5;
-    next();
-  },
+  // function (req, res, next) {
+  //   res.locals.memberId = 5;
+  //   next();
+  // },
   //<<<   // >>> member middleware
   async (req, res) => {
     const output = {
@@ -23,8 +25,9 @@ router.get(
     };
     // const sid = parseInt(req.params.sid) || 0;
     // FIXME:temporate member sid
-    const sid = parseInt(res.locals.memberId);
-    if (!sid) {
+    // const sid = parseInt(res.locals.memberId);
+    const { sid: mID } = res.locals.user; // add auth
+    if (!mID) {
       output.error = 'wrong id';
       return res.status(200).json(output);
     }
@@ -42,7 +45,7 @@ router.get(
     let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
-    WHERE er.member_sid = ${sid} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
+    WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
     ORDER BY er.exe_date DESC;`;
 
     let [rows] = await db.query(sql);
@@ -66,7 +69,8 @@ router.get(
 
 // >>> add exercise record =======================================================================
 router.post('/add-record', async (req, res, next) => {
-  let mID = 5;
+  // let mID = 5; //for test
+  const { sid: mID } = res.locals.user; // add auth
   const { typeID, quantity, sets, reps, date } = req.body;
 
   const sql = `INSERT INTO record_exercise_record( member_sid ,  exe_type_sid ,  weight ,  sets ,  reps ,  exe_date ) VALUES ( ? , ? , ? , ? , ? , ? )`;
@@ -81,8 +85,8 @@ router.post('/add-record', async (req, res, next) => {
 
 // >>> delete exercise record for one centain date =======================================================================
 router.delete('/delete-record', async (req, res, next) => {
-  // FIXME:temporate member sid
-  let mID = 5;
+  // let mID = 5;
+  const { sid: mID } = res.locals.user; // add auth
   const output = {
     success: false,
     error: '',
@@ -90,7 +94,6 @@ router.delete('/delete-record', async (req, res, next) => {
   };
 
   const { date } = req.body;
-  console.log(date);
   if (!date) {
     output.error = 'wrong date';
     return res.status(200).json(output);
@@ -109,10 +112,10 @@ router.delete('/delete-record', async (req, res, next) => {
 router.get(
   '/exercise-record-plot/:start/:end/:exeSid',
   // >>> member middleware
-  function (req, res, next) {
-    res.locals.memberId = 5;
-    next();
-  },
+  // function (req, res, next) {
+  //   res.locals.memberId = 5;
+  //   next();
+  // },
   //<<<   // >>> member middleware
   async (req, res) => {
     const output = {
@@ -120,10 +123,11 @@ router.get(
       error: '',
       data: null,
     };
-    // FIXME:temporate member sid
-    const sid = parseInt(res.locals.memberId);
+    // const sid = parseInt(res.locals.memberId);
+
+    const { sid: mID } = res.locals.user; // add auth
     const exeSid = req.params.exeSid || 0;
-    if (!sid) {
+    if (!mID) {
       output.error = 'wrong id';
       return res.status(200).json(output);
     }
@@ -146,7 +150,7 @@ router.get(
     let sql = `SELECT er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, er.weight AS quantity, er.sets, er.reps, DATE(er.exe_date) AS date
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
-    WHERE er.member_sid = ${sid} AND er.exe_type_sid = ${exeSid} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
+    WHERE er.member_sid = ${mID} AND er.exe_type_sid = ${exeSid} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
     ORDER BY er.exe_date DESC;`;
     let [rows] = await db.query(sql);
 
