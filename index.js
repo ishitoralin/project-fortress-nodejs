@@ -13,6 +13,8 @@ const SCeditquantity = require(__dirname + '/routes/SCeditquantity');
 const SCadd = require(__dirname + '/routes/SCadd');
 const SCdelete = require(__dirname + '/routes/SCdelete');
 const SCrecommanded = require(__dirname + '/routes/SCrecommanded');
+const SCpopular = require(__dirname + '/routes/SCpopular');
+const SChotlesson = require(__dirname + '/routes/SChotlesson');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -61,9 +63,8 @@ app.use('/SCdelete', SCdelete);
 // loaging data (order_main) then show in the secondpage
 
 app.use('/SCrecommanded', SCrecommanded);
-// show recommanded products datas to shopping cart
-// show popular products datas to shopping cart
-// show recommanded lesson datas to shopping cart
+app.use('/SCpopular', SCpopular);
+app.use('/SChotlesson', SChotlesson);
 
 // check if user login state before entering shoppingcart
 // if user click the import user info button > fetch user info from database (member), use sql syntax below
