@@ -1,15 +1,13 @@
 const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
-const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
 const router = express.Router();
-// router.get('/test', (req, res) => {
-//   res.status(200).json({ a: 1 });
-// });
-
-// router.get('/cart', ({ query: { sid } }, res) => {
-router.get('/:sid', async (req, res) => {
-  const sid = req.params?.sid;
+// 從資料庫抓取資料，購物車顯示商品
+// postman用get
+const { protect } = require(__dirname + '/../modules/auth.js');
+router.use(protect);
+router.get('/', async (req, res) => {
+  const { sid } = res.locals.user;
   if (!sid || isNaN(sid)) {
     return res.status(404).json({ error: '無效的id' });
   }
@@ -39,7 +37,7 @@ router.get('/:sid', async (req, res) => {
       WHEN oc.products_type_sid = 1 THEN pn.picture
       WHEN oc.products_type_sid = 2 THEN fn.picture
       WHEN oc.products_type_sid = 3 THEN en.picture
-      WHEN oc.products_type_sid = 4 THEN ln.category_sid
+      WHEN oc.products_type_sid = 4 THEN ln.img
       ELSE NULL
   END AS picture
 FROM
@@ -50,15 +48,18 @@ FROM
   AND oc.item_sid = fn.sid
   LEFT JOIN equipment_name AS en ON oc.products_type_sid = 3
   AND oc.item_sid = en.sid
-  LEFT JOIN c_l_lessons AS ln ON oc.products_type_sid = 4
+  LEFT JOIN (SELECT l.* , c.img
+  FROM c_l_lessons AS l
+  JOIN c_l_category AS c
+  WHERE l.category_sid = c.sid) AS ln ON oc.products_type_sid = 4
   AND oc.item_sid = ln.sid
 WHERE
-  oc.member_sid = 5;`;
+  oc.member_sid = ?;`;
 
   let rows;
   [rows] = await db.query(query, [sid]);
-
   const data = rows;
+  console.log(data);
   res.status(200).json({ code: 200, data });
 });
 
