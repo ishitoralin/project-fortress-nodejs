@@ -209,6 +209,19 @@ WHERE mfl.member_sid = ${sid}`;
       res.status(404).json({ code: 404, message: '刪除最愛課程失敗' });
     }
   })
+  .get('/member-favorite-products/:cid/:pid', async (req, res, next) => {
+    const { sid: mid } = res.locals.user;
+    const { cid, pid } = req.params;
+    let sql = `SELECT COUNT(1) FROM member_favorite_products WHERE  member_sid = ${mid} AND  product_sid  = ? AND category_sid=?`;
+    const [[result]] = await db.query(sql, [pid, cid]);
+    let favorite = false;
+    let message = '此商品沒有加入最愛';
+    if (result['COUNT(1)']) {
+      favorite = true;
+      message = '此商品已加入最愛';
+    }
+    res.status(200).json({ code: 200, favorite, message });
+  })
   .get('/member-favorite-products', async (req, res, next) => {
     /* let output = {
       redirect: '',
