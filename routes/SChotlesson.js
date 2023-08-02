@@ -24,7 +24,6 @@ router.get('/', async (req, res) => {
   [rows] = await db.query(query, []);
   const data = rows;
   const shuffledData = shuffleArray(data);
-  console.log(shuffledData);
   res.status(200).json({ code: 200, shuffledData });
 });
 

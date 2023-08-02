@@ -15,6 +15,8 @@ const SCdelete = require(__dirname + '/routes/SCdelete');
 const SCrecommanded = require(__dirname + '/routes/SCrecommanded');
 const SCpopular = require(__dirname + '/routes/SCpopular');
 const SChotlesson = require(__dirname + '/routes/SChotlesson');
+const SCconfirm = require(__dirname + '/routes/SCconfirm');
+const OLbuyerData = require(__dirname+'/routes/OLbuyerData')
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -50,8 +52,7 @@ app.use('/api/email', emailRouter);
 app.use('/cart', cart);
 app.use('/SCeditquantity', SCeditquantity);
 app.use('/SCadd', SCadd);
-// TODO 問QT 前端怎麼傳member sid去後端
-
+app.use('/SCconfirm', SCconfirm);
 // button (add products to shoppingcart and database,(2 places (detail pages(can choose quantity) and  product list page(set quantity as 1))))
 app.use('/SCdelete', SCdelete);
 // button for deleting all items at once
@@ -62,7 +63,7 @@ app.use('/SCdelete', SCdelete);
 app.use('/SCrecommanded', SCrecommanded);
 app.use('/SCpopular', SCpopular);
 app.use('/SChotlesson', SChotlesson);
-
+app.use('/OLbuyerData',OLbuyerData);
 // check if user login state before entering shoppingcart
 // if user click the import user info button > fetch user info from database (member), use sql syntax below
 // 'SELECT m.name , m.email ,m.mobile , m.address FROM member AS m WHERE m.sid = ?'
