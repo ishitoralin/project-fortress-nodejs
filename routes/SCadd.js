@@ -2,14 +2,17 @@ const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
 // const dayjs = require('dayjs');
 require('dayjs/locale/zh-tw');
+const { protect } = require(__dirname + '/../modules/auth.js');
 const router = express.Router();
 // TODO 從前端送req.body過來，須包含所有order cart欄位資料
 // postman用post
 
+router.use(protect);
 router.post('/', async (req, res) => {
-  // const order_sid = req.params?.sid;
-  const { member_sid, products_type_sid, item_sid, quantity } = req.body;
-  if (!member_sid || !products_type_sid || !item_sid || isNaN(quantity)) {
+  const { sid: member_sid } = res.locals.user;
+  const { products_type_sid, item_sid, quantity } = req.body;
+  console.log(products_type_sid, item_sid, quantity);
+  if (!products_type_sid || !item_sid || isNaN(quantity)) {
     return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
   }
 
