@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
   cart.map(async (v) => {
     const { products_type_sid, item_sid, quantity } = v;
     const insertDataToDetail = `INSERT INTO
-    order_detail(order_sid, member_sid, prduct_type_sid,
+    order_detail(order_sid, member_sid, products_type_sid,
       item_sid, quantity, created_at)
     VALUES (?,?,?,?,?,NOW())`;
     await db.query(insertDataToDetail, [
