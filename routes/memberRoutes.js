@@ -367,51 +367,84 @@ WHERE mfp.member_sid =?
         output.perPage
       }) AS om
     LEFT JOIN
-      (SELECT * FROM order_detail  ) AS od  ON om.sid = od.order_sid
+      (
+        SELECT 
+          od.sid,
+          od.member_sid,
+          od.item_sid,
+          od.product_type_sid ,
+          od.quantity,
+          od.order_sid,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.product_name
+            WHEN od.product_type_sid = 2 THEN fn.food_name
+            WHEN od.product_type_sid = 3 THEN en.equipment_name
+            WHEN od.product_type_sid = 4 THEN cll.name
+          END AS name,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.picture
+            WHEN od.product_type_sid = 2 THEN fn.picture
+            WHEN od.product_type_sid = 3 THEN en.picture
+            WHEN od.product_type_sid = 4 THEN cll.img
+          END AS picture,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.price
+            WHEN od.product_type_sid = 2 THEN fn.price
+            WHEN od.product_type_sid = 3 THEN en.price
+            WHEN od.product_type_sid = 4 THEN cll.price
+          END AS price
+        FROM order_detail od
+        LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+        LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+        LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+        LEFT JOIN (
+          SELECT cll.sid,cll.price, cll.name, clc.img AS img
+          FROM c_l_lessons cll
+          LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+        ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid
     
       ${where}  `;
 
-      /* FIXME
-      SELECT 
-od.sid,od.member_sid,
-od.product_type_sid AS pts,
-od.quantity,od.quantity,
-CASE
+      /* 
+    
+SELECT 
+  od.sid,
+  od.member_sid,
+  od.product_type_sid AS pts,
+  od.quantity,
+  CASE
     WHEN od.product_type_sid = 1 THEN 1
     WHEN od.product_type_sid = 2 THEN 2
     WHEN od.product_type_sid = 3 THEN 3
     WHEN od.product_type_sid = 4 THEN 4
-       END AS product_type_sid  ,
-    CASE
+  END AS product_type_sid,
+  CASE
     WHEN od.product_type_sid = 1 THEN pn.product_name
     WHEN od.product_type_sid = 2 THEN fn.food_name
     WHEN od.product_type_sid = 3 THEN en.equipment_name
     WHEN od.product_type_sid = 4 THEN cll.name
-       END AS name  ,
-CASE
+  END AS name,
+  CASE
     WHEN od.product_type_sid = 1 THEN pn.picture
     WHEN od.product_type_sid = 2 THEN fn.picture
     WHEN od.product_type_sid = 3 THEN en.picture
-       END AS picture  ,
-CASE
+    WHEN od.product_type_sid = 4 THEN cll.img
+  END AS picture,
+  CASE
     WHEN od.product_type_sid = 1 THEN pn.price
     WHEN od.product_type_sid = 2 THEN fn.price
     WHEN od.product_type_sid = 3 THEN en.price
     WHEN od.product_type_sid = 4 THEN cll.price
-       END AS price
- FROM order_detail od
-LEFT JOIN
-product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
-LEFT JOIN
-food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
-LEFT JOIN
-equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
-LEFT JOIN
-equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3 
-//這邊有錯
-LEFT JOIN
-(SELECT cll.price,cll.name,clc.name,clc.img FROM c_l_lessons cll LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
-) AS cll ON ( AND cll.sid = od.item_sid AND od.product_type_sid = 4)
+  END AS price
+FROM order_detail od
+LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+LEFT JOIN (
+  SELECT cll.sid,cll.price, cll.name, clc.img AS img
+  FROM c_l_lessons cll
+  LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4;
 	
       */
       let rows;
