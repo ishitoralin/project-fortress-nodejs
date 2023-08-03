@@ -44,9 +44,9 @@ router
       let rows;
       let user;
       let accessToken;
-      [rows] = await db.query(
-        `SELECT * FROM member WHERE sid = ${decodedRefresh.sid}`
-      );
+      [rows] = await db.query(`SELECT * FROM member WHERE sid = ?`, [
+        decodedRefresh.sid,
+      ]);
       if (rows.length > 0) {
         user = rows[0];
         console.log(user);
@@ -84,7 +84,7 @@ router
   .post('/login', async (req, res) => {
     const { email, password } = req.body;
     let rows;
-    [rows] = await db.query(`SELECT * FROM member WHERE email = '${email}'`);
+    [rows] = await db.query(`SELECT * FROM member WHERE email = ? `, [email]);
     let user;
     if (rows.length > 0) {
       user = rows[0];
@@ -115,7 +115,7 @@ router
       });
 
       //放入accessToken進json 前端接住丟進state內
-      user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
+      // user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
       return res.status(200).json({
         code: 200,
         accessToken,
@@ -150,14 +150,92 @@ router
     //#region 檢查過後，註冊信箱，往SQL插入資料
     let sql = `
     INSERT INTO member 
-    (sid,name ,password,email,sex_sid,active,created_at) values
-    ( ? , ? , ? , ? , 3 , 1 , NOW() )`;
+    (name ,password,email,sex_sid,active,created_at) values
+    (  ? , ? , ? , 3 , 1 , NOW() )`;
     const hashPassword = await bcrypt.hash(password, 10);
-    const result = await db.query(sql, [v4(), name, hashPassword, email]);
+    const result = await db.query(sql, [name, hashPassword, email]);
     if (result[0]?.affectedRows) {
       return res.status(200).json({ code: 200, message: '註冊成功' });
     }
     //#endregion
     res.status(200).json({ code: 200, message: '註冊失敗' });
+  })
+  .post('/google-login', async (req, res, next) => {
+    /* providerId: 'google.com',
+  uid: '108313895597091290857',
+  displayName: '健身堡壘',
+  email: 'jianshenbaolei@gmail.com',
+  phoneNumber: null,
+  photoURL: 'https://lh3.googleusercontent.com/a/AAcHTte8qF5maA4hwwuygM_EOvSzNphCYKjJePnZOQskjNel=s96-c'    
+} */
+    const { displayName, email, uid } = req.body;
+    //先檢查email是否存在
+    const [[emailCheck]] = await db.query(
+      `SELECT COUNT(1) FROM member WHERE member.email = ? `,
+      [email]
+    );
+    //有帳號
+    if (emailCheck?.['COUNT(1)'] > 0) {
+      let rows;
+
+      [rows] = await db.query(`SELECT * FROM member WHERE email = ?`, [email]);
+      let user = rows[0];
+      const accessToken = jwt.sign(
+        {
+          sid: user.sid,
+          name: user.name,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '60m' }
+      );
+      const refreshToken = jwt.sign(
+        { sid: user.sid, name: user.name },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: '60d' }
+      );
+      //放入refreshToken進httponly cookie
+      res.cookie('g4RefreshToken', refreshToken, {
+        maxAge: 5184000000,
+      });
+
+      //放入accessToken進json 前端接住丟進state內
+      // user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
+      console.log('google login work');
+      return res.status(200).json({
+        code: 200,
+        accessToken,
+        user: {
+          id: user.sid,
+          name: user.name,
+          role: user.role_sid,
+          icon:
+            user.hero_icon === null
+              ? ''
+              : `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`,
+        },
+        message: '登入成功',
+      });
+    }
+
+    //沒帳號
+    else {
+      const unreachablePassword = v4();
+      const hashPassword = await bcrypt.hash(unreachablePassword, 10);
+      let sql = `
+    INSERT INTO member 
+    (name ,password,email,sex_sid,active,created_at,providerData ,google_uid) values
+    (  ? , ? , ? , 3 , 1 , NOW() ,? ,? )`;
+      const result = await db.query(sql, [
+        displayName,
+        hashPassword,
+        email,
+        JSON.stringify(req.body),
+        uid,
+      ]);
+      if (result[0]?.affectedRows) {
+        return res.status(200).json({ code: 200, message: '註冊成功' });
+      }
+    }
+    // res.status(200).json({ code: 200, message: 'google work' });
   });
 module.exports = router;
