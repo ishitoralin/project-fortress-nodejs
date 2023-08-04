@@ -19,9 +19,12 @@ router.get('/', async (req, res) => {
   let rows;
   [rows] = await db.query(query, []);
   const data = rows;
+  data.forEach((el) => {
+    el['parent_id'] = 1;
+  });
   const shuffledData = shuffleArray(data);
-
-  res.status(200).json({ code: 200, shuffledData });
+  const newData = shuffledData.splice(0, 10);
+  res.status(200).json({ code: 200, newData });
 });
 
 module.exports = router;

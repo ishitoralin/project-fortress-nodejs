@@ -17,14 +17,18 @@ router.get('/', async (req, res) => {
   const query = `SELECT l.* , c.img
   FROM c_l_lessons AS l
   JOIN c_l_category AS c
-  WHERE l.category_sid = c.sid
-  limit 10`;
+  WHERE l.category_sid = c.sid`;
 
   let rows;
   [rows] = await db.query(query, []);
   const data = rows;
+  data.forEach((el) => {
+    el['parent_id'] = 4;
+  });
   const shuffledData = shuffleArray(data);
-  res.status(200).json({ code: 200, shuffledData });
+  const newData = shuffledData.splice(0, 10);
+  console.log(newData);
+  res.status(200).json({ code: 200, newData });
 });
 
 module.exports = router;

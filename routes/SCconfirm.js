@@ -17,19 +17,17 @@ router.post('/', async (req, res) => {
   //把資料塞到order_main
   const insertDataToMain = `INSERT INTO 
   order_main
-  (member_sid, member_coupon_relation_sid, amount, 
+  (member_sid,  amount, 
     buy_time, pay_time, method_sid, 
-    payment, name,address,phone,email) 
+     name,address,phone,email) 
   VALUES 
-  (?,?,?,
+  (?,?,
     NOW(),?,?,
     ?,?,?,
-    ?,?)`;
+    ?)`;
   await db.query(insertDataToMain, [
     `${member_sid}`,
-    null,
     cart.length,
-    null,
     null,
     null,
     null,
@@ -48,7 +46,7 @@ router.post('/', async (req, res) => {
   cart.map(async (v) => {
     const { products_type_sid, item_sid, quantity } = v;
     const insertDataToDetail = `INSERT INTO
-    order_detail(order_sid, member_sid, prduct_type_sid,
+    order_detail(order_sid, member_sid, products_type_sid,
       item_sid, quantity, created_at)
     VALUES (?,?,?,?,?,NOW())`;
     await db.query(insertDataToDetail, [

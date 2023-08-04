@@ -16,7 +16,10 @@ const SCrecommanded = require(__dirname + '/routes/SCrecommanded');
 const SCpopular = require(__dirname + '/routes/SCpopular');
 const SChotlesson = require(__dirname + '/routes/SChotlesson');
 const SCconfirm = require(__dirname + '/routes/SCconfirm');
-const OLbuyerData = require(__dirname+'/routes/OLbuyerData')
+const OLbuyerData = require(__dirname + '/routes/OLbuyerData');
+const OLautofillinfo = require(__dirname + '/routes/OLautofillinfo');
+const OLdelivery = require(__dirname + '/routes/OLdelivery');
+const OLdeliveryMethod = require(__dirname + '/routes/OLdeliveryMethod');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -45,7 +48,6 @@ app.use(cookieParser());
 app.use('/lesson', require(__dirname + '/routes/lesson'));
 app.use('/coach', require(__dirname + '/routes/coach'));
 
-
 //登入用
 app.use('/api/auth', authRouter);
 //寄信用
@@ -66,7 +68,10 @@ app.use('/SCdelete', SCdelete);
 app.use('/SCrecommanded', SCrecommanded);
 app.use('/SCpopular', SCpopular);
 app.use('/SChotlesson', SChotlesson);
-app.use('/OLbuyerData',OLbuyerData);
+app.use('/OLbuyerData', OLbuyerData);
+app.use('/OLautofillinfo', OLautofillinfo);
+app.use('/OLdelivery', OLdelivery);
+app.use('/OLdeliveryMethod', OLdeliveryMethod);
 // check if user login state before entering shoppingcart
 // if user click the import user info button > fetch user info from database (member), use sql syntax below
 // 'SELECT m.name , m.email ,m.mobile , m.address FROM member AS m WHERE m.sid = ?'
