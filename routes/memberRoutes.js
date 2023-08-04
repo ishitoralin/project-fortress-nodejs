@@ -55,9 +55,9 @@ router
 
     const { sid } = res.locals.user;
     const sql = `UPDATE member SET 
-    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ${sid};`;
+    mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ?;`;
     let rows;
-    rows = await db.query(sql, [mobile, birth, address, sex]);
+    rows = await db.query(sql, [mobile, birth, address, sex, sid]);
     console.log(rows[0].affectedRows);
     res.status(200).json({ message: '修改成功' });
     // .json({ code: 200, data: rows[0], message: '有資料' });
@@ -66,9 +66,9 @@ router
   .patch('/icon', upload.single('avatar'), async (req, res, next) => {
     const { sid } = res.locals.user;
     console.log(req.file.filename);
-    let sql = `UPDATE member SET hero_icon = '${req.file.filename}' WHERE sid=${sid}`;
+    let sql = `UPDATE member SET hero_icon = '${req.file.filename}' WHERE sid =?`;
     console.log(sql);
-    await db.query(sql);
+    await db.query(sql, [sid]);
     res.status(200).json({
       code: 200,
       filename: req.file.filename,
@@ -103,10 +103,10 @@ router
 LEFT JOIN c_l_lessons AS cll ON cll.sid = mfl.lesson_sid 
 LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
 LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
-WHERE mfl.member_sid = ${sid}`;
+WHERE mfl.member_sid = ?`;
 
     let rows;
-    [rows] = await db.query(sql);
+    [rows] = await db.query(sql, [sid]);
     if (rows.length > 0) {
       rows = rows.map((el) => {
         return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
@@ -134,7 +134,7 @@ WHERE mfl.member_sid = ${sid}`;
     }
     const { sid: mid } = res.locals.user;
 
-    let where = ` WHERE mfl.member_sid = ${mid} `;
+    let where = ` WHERE mfl.member_sid = ? `;
     let keyword;
     if (req.query.keyword) {
       keyword = db.escape('%' + req.query.keyword + '%');
@@ -148,7 +148,7 @@ WHERE mfl.member_sid = ${sid}`;
     LEFT JOIN c_l_category AS clc ON cll.category_sid = clc.sid
     LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
     ${where}`;
-    const [[{ totalRows }]] = await db.query(t_sql);
+    const [[{ totalRows }]] = await db.query(t_sql, [mid]);
     if (totalRows) {
       output.totalRows = totalRows;
       output.totalPages = Math.ceil(totalRows / output.perPage);
@@ -167,7 +167,7 @@ WHERE mfl.member_sid = ${sid}`;
       LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
       ${where} LIMIT ${output.perPage * (output.page - 1)}, ${output.perPage}`;
       let rows;
-      [rows] = await db.query(sql);
+      [rows] = await db.query(sql, [mid]);
       if (rows.length > 0) {
         rows = rows.map((el) => {
           return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
@@ -185,9 +185,9 @@ WHERE mfl.member_sid = ${sid}`;
     const { lsid } = req.body;
     let sql = `
   INSERT INTO member_favorite_lessons( member_sid  , lesson_sid) 
-  VALUES ( ${sid}   , ${lsid}) `;
+  VALUES ( ?   , ?) `;
     try {
-      await db.query(sql);
+      await db.query(sql, [sid, lsid]);
       res.status(200).json({ code: 200, message: '新增最愛課程成功' });
     } catch (error) {
       res.status(404).json({ code: 404, message: '新增最愛課程失敗' });
@@ -198,9 +198,9 @@ WHERE mfl.member_sid = ${sid}`;
     const { sid: lid } = req.body;
     const { sid: mid } = res.locals.user;
     console.log(lid, mid);
-    let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.lesson_sid = ${lid} AND member_favorite_lessons.member_sid = ${mid}`;
+    let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.lesson_sid = ${lid} AND member_favorite_lessons.member_sid = ?`;
     try {
-      const rows = await db.query(sql);
+      const rows = await db.query(sql, [mid]);
       if (!rows[0]['affectedRows']) {
         throw new Error('failed');
       }
@@ -236,7 +236,13 @@ WHERE mfl.member_sid = ${sid}`;
       return res.status(404).json({ code: 404, output, message: '沒有資料' });
     } */
     const { sid } = res.locals.user;
-    let sql = `SELECT mfp.sid , CASE
+    let sql = `SELECT mfp.sid , 
+    CASE
+    WHEN mfp.category_sid = 1 THEN 1
+    WHEN mfp.category_sid = 2 THEN 2
+    WHEN mfp.category_sid = 3 THEN 3
+       END AS category_sid  ,
+    CASE
     WHEN mfp.category_sid = 1 THEN pn.product_name
     WHEN mfp.category_sid = 2 THEN fn.food_name
     WHEN mfp.category_sid = 3 THEN en.equipment_name
@@ -255,10 +261,10 @@ FROM member_favorite_products  AS mfp
 LEFT JOIN product_name AS pn ON mfp.product_sid = pn.sid AND mfp.category_sid = 1
 LEFT JOIN food_name AS fn ON mfp.product_sid = fn.sid AND mfp.category_sid = 2
 LEFT JOIN equipment_name AS en ON mfp.product_sid = en.sid AND mfp.category_sid = 3
-WHERE mfp.member_sid =${sid}
+WHERE mfp.member_sid =?
 `;
     let rows;
-    [rows] = await db.query(sql);
+    [rows] = await db.query(sql, [sid]);
     if (rows.length > 0) {
       rows = rows.map((el) => {
         return { ...el, picture: el.picture?.split(',')[0] };
@@ -274,9 +280,9 @@ WHERE mfp.member_sid =${sid}
     const { psid, csid } = req.body;
     let sql = `
   INSERT INTO member_favorite_products( member_sid , category_sid , product_sid) 
-  VALUES ( ${sid}  , ${csid} , ${psid}) `;
+  VALUES ( ?  , ? , ?) `;
     try {
-      await db.query(sql);
+      await db.query(sql, [sid, csid, psid]);
       res.status(200).json({ code: 200, message: '新增最愛商品成功' });
     } catch (error) {
       res.status(404).json({ code: 404, message: '新增最愛商品失敗' });
@@ -287,9 +293,9 @@ WHERE mfp.member_sid =${sid}
     const { pid, cid } = req.body;
     const { sid: mid } = res.locals.user;
     console.log(pid, cid, mid);
-    let sql = `DELETE FROM member_favorite_products WHERE ( member_favorite_products.product_sid = ${pid} ) AND ( member_favorite_products.category_sid=${cid} ) AND  ( member_favorite_products.member_sid=${mid} )`;
+    let sql = `DELETE FROM member_favorite_products WHERE ( member_favorite_products.product_sid = ? ) AND ( member_favorite_products.category_sid= ? ) AND  ( member_favorite_products.member_sid= ? )`;
     try {
-      const rows = await db.query(sql);
+      const rows = await db.query(sql, [pid, cid, mid]);
       if (!rows[0]['affectedRows']) {
         throw new Error('failed');
       }
@@ -297,6 +303,301 @@ WHERE mfp.member_sid =${sid}
     } catch (error) {
       res.status(404).json({ code: 404, message: '刪除最愛商品失敗' });
     }
+  })
+  .get('/my-orders', async (req, res, next) => {
+    let output = {
+      redirect: '',
+      totalRows: 0,
+      perPage: 6,
+      totalPages: 0,
+      page: 1,
+      rows: [],
+    };
+    output.page = req.query.page ? parseInt(req.query.page) : 1;
+    if (!output.page || output.page < 1) {
+      output.redirect = req.baseUrl + req.path;
+
+      return res.status(404).json({ code: 200, output, message: '沒有資料' });
+    }
+    const { sid: mid } = res.locals.user;
+
+    let where = ` WHERE om.member_sid = ? `;
+    let keyword;
+    if (req.query.keyword) {
+      keyword = db.escape('%' + req.query.keyword + '%');
+      where += ` AND 
+      cll.name LIKE ${keyword} OR nickname LIKE ${keyword}
+      `; //FIXME要改
+    }
+    const t_sql = `
+    SELECT COUNT(1) totalRows FROM  order_main AS om 
+    ${where}`;
+    const [[{ totalRows }]] = await db.query(t_sql, [mid]);
+    if (totalRows) {
+      output.totalRows = totalRows;
+      output.totalPages = Math.ceil(totalRows / output.perPage);
+      if (output.page > output.totalPages) {
+        output.redirect =
+          req.baseUrl +
+          req.path +
+          '?page=' +
+          output.totalPages +
+          `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
+        return res.status(200).json({ code: 200, output, message: '沒有資料' });
+      }
+      /*  let sql = `SELECT
+      om.sid as main_sid,
+      om.member_sid,
+      om.amount,
+      om.buy_time,
+      om.pay_time,
+      om.method_sid,
+      om.payment,
+      om.name,
+      om.address,
+      om.phone,
+      om.email,
+      od.sid as detail_sid,
+      od.order_sid,
+      od.product_type_sid,
+      od.item_sid,
+      od.quantity
+    FROM
+     ( SELECT * FROM order_main  LIMIT ${output.perPage * (output.page - 1)},${
+        output.perPage
+      }) AS om
+    LEFT JOIN
+      (
+        SELECT 
+          od.sid,
+          od.member_sid,
+          od.item_sid,
+          od.product_type_sid ,
+          od.quantity,
+          od.order_sid,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.product_name
+            WHEN od.product_type_sid = 2 THEN fn.food_name
+            WHEN od.product_type_sid = 3 THEN en.equipment_name
+            WHEN od.product_type_sid = 4 THEN cll.name
+          END AS name,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.picture
+            WHEN od.product_type_sid = 2 THEN fn.picture
+            WHEN od.product_type_sid = 3 THEN en.picture
+            WHEN od.product_type_sid = 4 THEN cll.img
+          END AS picture,
+          CASE
+            WHEN od.product_type_sid = 1 THEN pn.price
+            WHEN od.product_type_sid = 2 THEN fn.price
+            WHEN od.product_type_sid = 3 THEN en.price
+            WHEN od.product_type_sid = 4 THEN cll.price
+          END AS price
+        FROM order_detail od
+        LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+        LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+        LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+        LEFT JOIN (
+          SELECT cll.sid,cll.price, cll.name, clc.img AS img
+          FROM c_l_lessons cll
+          LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+        ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid
+    
+      ${where}  `; */
+      let sql = `SELECT
+       om.sid as main_sid,
+       om.member_sid,
+       om.amount,
+       om.buy_time,
+       om.pay_time,
+       om.method_sid,
+       om.name as recipient,
+       om.address,
+       om.phone,
+       om.email,
+       od.sid as detail_sid,
+       od.product_type_sid AS cid,
+       od.item_sid AS pid,
+       od.name,
+       od.picture,
+       od.price,
+       od.quantity
+     
+     FROM
+     ( SELECT * FROM order_main  LIMIT ${output.perPage * (output.page - 1)},${
+        output.perPage
+      }) AS om
+     LEFT JOIN
+       (
+         SELECT 
+           od.sid,
+           od.member_sid,
+           od.item_sid,
+           od.order_sid,
+           od.product_type_sid ,
+           od.quantity,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.product_name
+             WHEN od.product_type_sid = 2 THEN fn.food_name
+             WHEN od.product_type_sid = 3 THEN en.equipment_name
+             WHEN od.product_type_sid = 4 THEN cll.name
+           END AS name,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.picture
+             WHEN od.product_type_sid = 2 THEN fn.picture
+             WHEN od.product_type_sid = 3 THEN en.picture
+             WHEN od.product_type_sid = 4 THEN cll.img
+           END AS picture,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.price
+             WHEN od.product_type_sid = 2 THEN fn.price
+             WHEN od.product_type_sid = 3 THEN en.price
+             WHEN od.product_type_sid = 4 THEN cll.price
+           END AS price
+         FROM order_detail od
+         LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+         LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+         LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+         LEFT JOIN (
+           SELECT cll.sid,cll.price, cll.name, clc.img AS img
+           FROM c_l_lessons cll
+           LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+         ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid ${where}  `;
+
+      /*   
+SELECT 
+  od.sid,
+  od.member_sid,
+  od.product_type_sid AS pts,
+  od.quantity,
+  CASE
+    WHEN od.product_type_sid = 1 THEN 1
+    WHEN od.product_type_sid = 2 THEN 2
+    WHEN od.product_type_sid = 3 THEN 3
+    WHEN od.product_type_sid = 4 THEN 4
+  END AS product_type_sid,
+  CASE
+    WHEN od.product_type_sid = 1 THEN pn.product_name
+    WHEN od.product_type_sid = 2 THEN fn.food_name
+    WHEN od.product_type_sid = 3 THEN en.equipment_name
+    WHEN od.product_type_sid = 4 THEN cll.name
+  END AS name,
+  CASE
+    WHEN od.product_type_sid = 1 THEN pn.picture
+    WHEN od.product_type_sid = 2 THEN fn.picture
+    WHEN od.product_type_sid = 3 THEN en.picture
+    WHEN od.product_type_sid = 4 THEN cll.img
+  END AS picture,
+  CASE
+    WHEN od.product_type_sid = 1 THEN pn.price
+    WHEN od.product_type_sid = 2 THEN fn.price
+    WHEN od.product_type_sid = 3 THEN en.price
+    WHEN od.product_type_sid = 4 THEN cll.price
+  END AS price
+FROM order_detail od
+LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+LEFT JOIN (
+  SELECT cll.sid,cll.price, cll.name, clc.img AS img
+  FROM c_l_lessons cll
+  LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4;
+	
+      */
+      let rows;
+      [rows] = await db.query(sql, [mid]);
+      if (rows.length > 0) {
+        const dict = {};
+        let newRows = [];
+        rows.forEach((el) => {
+          if (dict[el.main_sid] !== el.main_sid) {
+            dict[el.main_sid] = el.main_sid;
+            newRows.push({
+              main_sid: el.main_sid,
+              member_sid: el.member_sid,
+              amount: el.amount,
+              buy_time: dayjs(el.buy_time).format('YYYY-MM-DD-hh-mm-A'),
+              pay_time: dayjs(el.pay_time).format('YYYY-MM-DD-hh-mm-A'),
+              method_sid: el.method_sid,
+              recipient: el.recipient,
+              address: el.address,
+              phone: el.phone,
+              email: el.email,
+              rows: [
+                {
+                  detail_sid: el.detail_sid,
+                  cid: el.cid,
+                  pid: el.pid,
+                  price: el.price,
+                  name: el.name,
+                  item_sid: el.item_sid,
+                  picture: el.picture,
+                  quantity: el.quantity,
+                },
+              ],
+            });
+            return;
+          }
+          /* od.sid as detail_sid,
+       od.product_type_sid AS cid,
+       od.item_sid AS pid,
+       od.name,
+       od.picture,
+       od.price,
+     od.quantity */
+
+          newRows.forEach((el2) => {
+            if (el2.main_sid === el.main_sid) {
+              el2.rows.push({
+                detail_sid: el.detail_sid,
+                cid: el.cid,
+                pid: el.pid,
+                price: el.price,
+                name: el.name,
+                item_sid: el.item_sid,
+                picture: el.picture,
+                quantity: el.quantity,
+              });
+            }
+          });
+        });
+        output.rows = newRows;
+        return res.status(200).json({ code: 200, output, message: '有資料' });
+      }
+
+      return res.status(200).json({ code: 200, message: '沒有資料' });
+    }
+  })
+  .get('/test', async (req, res, next) => {
+    let sql = `SELECT
+    om.sid as main_sid,
+    om.member_sid,
+    om.amount,
+    om.buy_time,
+    om.pay_time,
+    om.method_sid,
+    om.payment,
+    om.name,
+    om.address,
+    om.phone,
+    om.email,
+    od.sid as detail_sid,
+    od.order_sid,
+    od.product_type_sid,
+    od.item_sid,
+    od.quantity
+  FROM
+    order_main om
+ LEFT JOIN
+    order_detail od ON om.sid = od.order_sid
+  WHERE
+    om.member_sid = 5;`;
+    const { sid: mid } = res.locals.user;
+    let rows;
+    [rows] = await db.query(sql, [mid]);
+
+    return res.status(200).json({ code: 200, message: '有資料' });
   })
 
   .use('*', (req, res) => {
