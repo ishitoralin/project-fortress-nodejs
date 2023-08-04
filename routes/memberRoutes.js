@@ -167,7 +167,7 @@ WHERE mfl.member_sid = ?`;
       LEFT JOIN c_l_coachs AS clcoach ON cll.coach_sid =clcoach.sid
       ${where} LIMIT ${output.perPage * (output.page - 1)}, ${output.perPage}`;
       let rows;
-      [rows] = await db.query(sql);
+      [rows] = await db.query(sql, [mid]);
       if (rows.length > 0) {
         rows = rows.map((el) => {
           return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
@@ -345,7 +345,7 @@ WHERE mfp.member_sid =?
           `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
         return res.status(200).json({ code: 200, output, message: '沒有資料' });
       }
-      let sql = `SELECT
+      /*  let sql = `SELECT
       om.sid as main_sid,
       om.member_sid,
       om.amount,
@@ -403,10 +403,68 @@ WHERE mfp.member_sid =?
           LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
         ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid
     
-      ${where}  `;
+      ${where}  `; */
+      let sql = `SELECT
+       om.sid as main_sid,
+       om.member_sid,
+       om.amount,
+       om.buy_time,
+       om.pay_time,
+       om.method_sid,
+       om.name as recipient,
+       om.address,
+       om.phone,
+       om.email,
+       od.sid as detail_sid,
+       od.product_type_sid AS cid,
+       od.item_sid AS pid,
+       od.name,
+       od.picture,
+       od.price,
+       od.quantity
+     
+     FROM
+     ( SELECT * FROM order_main  LIMIT ${output.perPage * (output.page - 1)},${
+        output.perPage
+      }) AS om
+     LEFT JOIN
+       (
+         SELECT 
+           od.sid,
+           od.member_sid,
+           od.item_sid,
+           od.order_sid,
+           od.product_type_sid ,
+           od.quantity,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.product_name
+             WHEN od.product_type_sid = 2 THEN fn.food_name
+             WHEN od.product_type_sid = 3 THEN en.equipment_name
+             WHEN od.product_type_sid = 4 THEN cll.name
+           END AS name,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.picture
+             WHEN od.product_type_sid = 2 THEN fn.picture
+             WHEN od.product_type_sid = 3 THEN en.picture
+             WHEN od.product_type_sid = 4 THEN cll.img
+           END AS picture,
+           CASE
+             WHEN od.product_type_sid = 1 THEN pn.price
+             WHEN od.product_type_sid = 2 THEN fn.price
+             WHEN od.product_type_sid = 3 THEN en.price
+             WHEN od.product_type_sid = 4 THEN cll.price
+           END AS price
+         FROM order_detail od
+         LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
+         LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
+         LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+         LEFT JOIN (
+           SELECT cll.sid,cll.price, cll.name, clc.img AS img
+           FROM c_l_lessons cll
+           LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
+         ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid ${where}  `;
 
-      /* 
-    
+      /*   
 SELECT 
   od.sid,
   od.member_sid,
@@ -459,33 +517,46 @@ LEFT JOIN (
               main_sid: el.main_sid,
               member_sid: el.member_sid,
               amount: el.amount,
-              buy_time: el.buy_time,
-              pay_time: el.pay_time,
+              buy_time: dayjs(el.buy_time).format('YYYY-MM-DD-hh-mm-A'),
+              pay_time: dayjs(el.pay_time).format('YYYY-MM-DD-hh-mm-A'),
               method_sid: el.method_sid,
-              payment: el.payment,
-              name: el.name,
+              recipient: el.recipient,
               address: el.address,
               phone: el.phone,
               email: el.email,
               rows: [
                 {
                   detail_sid: el.detail_sid,
-                  order_sid: el.order_sid,
-                  product_type_sid: el.product_type_sid,
+                  cid: el.cid,
+                  pid: el.pid,
+                  price: el.price,
+                  name: el.name,
                   item_sid: el.item_sid,
+                  picture: el.picture,
                   quantity: el.quantity,
                 },
               ],
             });
             return;
           }
+          /* od.sid as detail_sid,
+       od.product_type_sid AS cid,
+       od.item_sid AS pid,
+       od.name,
+       od.picture,
+       od.price,
+     od.quantity */
+
           newRows.forEach((el2) => {
             if (el2.main_sid === el.main_sid) {
               el2.rows.push({
                 detail_sid: el.detail_sid,
-                order_sid: el.order_sid,
-                product_type_sid: el.product_type_sid,
+                cid: el.cid,
+                pid: el.pid,
+                price: el.price,
+                name: el.name,
                 item_sid: el.item_sid,
+                picture: el.picture,
                 quantity: el.quantity,
               });
             }
