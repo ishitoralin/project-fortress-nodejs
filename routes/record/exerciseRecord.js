@@ -121,7 +121,7 @@ router.get(
     const output = {
       success: false,
       error: '',
-      data: null,
+      data: 0,
     };
     // const sid = parseInt(res.locals.memberId);
 
@@ -159,16 +159,18 @@ router.get(
       return res.status(200).json(output);
     }
 
+    //>>> 計算volumn, 加入rows
     rows = rows.map((row) => {
       row.date = moment(row.date).format(fm);
-      // calc volumn
       row = {
         ...row,
         volumn: Number(row.quantity * row.reps * row.sets).toFixed(1),
       };
       return row;
     });
+    //<<< 計算volumn, 加入rows
 
+    //>>> 累加同一天的相同運動volumn
     rows = rows.reduce((acc, cur) => {
       const { member_sid, typeID, name, date, volumn } = cur;
       const curObj = { member_sid, typeID, name, date, volumn };
@@ -180,6 +182,7 @@ router.get(
       }
       return acc;
     }, []);
+    //<<< 累加同一天的相同運動volumn
 
     // console.log(rows);
     output.success = true;
