@@ -9,7 +9,6 @@ router.get('/', async (req, res) => {
     const [rows] = await db.query(query, []);
     const data = rows;
     res.status(200).json({ code: 200, data });
-    console.log(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '資料庫更新失敗' });

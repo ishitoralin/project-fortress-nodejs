@@ -10,8 +10,9 @@ router.get('/', async (req, res) => {
   let rows;
   [rows] = await db.query(query, []);
   const data = rows;
-  console.log(data);
-
+  data.forEach((el) => {
+    el['parent_id'] = 1;
+  });
   res.status(200).json({ code: 200, data });
 });
 
