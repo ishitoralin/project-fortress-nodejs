@@ -3,6 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require(__dirname + '/../modules/connectDB.js');
 const dayjs = require('dayjs');
+const ejs = require('ejs');
+const path = require('path');
+const transporter = require('../config/mail.js');
 const { v4 } = require('uuid');
 require('dayjs/locale/zh-tw');
 const { getUser } = require('../modules/auth');
@@ -14,10 +17,13 @@ router
     //#region 喚起前端初次載入app時refresh token的logic
     console.log('check-auth work');
     console.log(res?.locals?.user);
+    if (!res?.locals?.user) {
+      return res.sendStatus(401).end();
+    }
     if (res?.locals?.user) {
       return res.status(200).json({ code: 200, message: '已登入' });
     } else {
-      return res.send(401);
+      return res.sendStatus(401).end();
     }
     //#endregion
   })
@@ -49,7 +55,6 @@ router
       ]);
       if (rows.length > 0) {
         user = rows[0];
-        console.log(user);
         //issue accessToken 並回傳使用者資料
         accessToken = jwt.sign(
           {
@@ -57,24 +62,23 @@ router
             name: user.name,
           },
           process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: '60m' }
+          { expiresIn: '120m' }
         );
+        return res.status(200).json({
+          code: 200,
+          accessToken,
+          user: {
+            id: user.sid,
+            name: user.name,
+            role: user.role_sid,
+            icon:
+              user.hero_icon === null
+                ? ''
+                : `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`,
+          },
+          message: 'refresh成功',
+        });
       }
-
-      return res.status(200).json({
-        code: 200,
-        accessToken,
-        user: {
-          id: user.sid,
-          name: user.name,
-          role: user.role_sid,
-          icon:
-            user.hero_icon === null
-              ? ''
-              : `http://localhost:${process.env.PORT}/imgs/member/${user.hero_icon}`,
-        },
-        message: 'refresh成功',
-      });
     } else {
       return res.send(401);
     }
@@ -102,7 +106,7 @@ router
           name: user.name,
         },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '60m' }
+        { expiresIn: '120m' }
       );
       const refreshToken = jwt.sign(
         { sid: user.sid, name: user.name },
@@ -237,5 +241,71 @@ router
       }
     }
     // res.status(200).json({ code: 200, message: 'google work' });
+  })
+  .post('/reset-token', async (req, res, next) => {
+    const { email } = req.body;
+    console.log(email);
+    if (!email) {
+      return res.status(200).json({ code: 200, message: '沒有信箱' });
+    }
+    //去DB檢查有沒有此信箱 沒有就return
+
+    try {
+      let [[result]] = await db.query(
+        `SELECT COUNT(1) FROM member WHERE email = ?`,
+        [email]
+      );
+      if (result['COUNT(1)'] < 1) {
+        return res.status(200).json({ code: 200, message: '此信箱沒有註冊' });
+      }
+    } catch (error) {
+      return res.status(200).json({ code: 200, message: '此信箱沒有註冊!' });
+    }
+    //往db加入token 如果email重複了 就會update token
+    function getRandomFourDigits(min, max) {
+      return Math.floor(Math.random() * (max - min) + min);
+    }
+    let token = `${getRandomFourDigits(1000, 9999)}`;
+    await db.query(
+      `INSERT INTO member_reset_token ( email, token)  VALUES ( ? , ${token} )  ON DUPLICATE KEY UPDATE    
+      token = VALUES ( token )`,
+      [email]
+    );
+    //往下走 寄token
+
+    let url = `http://localhost:3000`;
+
+    //TODO換掉這邊的receiver
+    let receiver = `${email}`;
+
+    ejs.renderFile(
+      path.resolve() + '\\views\\verify.ejs',
+      { url, token },
+      (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          // email內容
+          const mailOptions = {
+            from: `${process.env.SMTP_TO_EMAIL}`,
+            to: `${receiver}`,
+            subject: '健身堡壘--驗證信',
+            html: data,
+          };
+
+          // 寄送
+          transporter.sendMail(mailOptions, (err, response) => {
+            if (err) {
+              // 失敗處理
+              console.log(err);
+              return res.status(400).json({ message: 'Failure', detail: err });
+            } else {
+              // 成功回覆的json
+              res.status(200).json({ code: 200, message: 'token發送成功' });
+            }
+          });
+        }
+      }
+    );
   });
 module.exports = router;

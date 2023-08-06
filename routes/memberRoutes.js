@@ -323,12 +323,12 @@ WHERE mfp.member_sid =?
 
     let where = ` WHERE om.member_sid = ? `;
     let keyword;
-    if (req.query.keyword) {
+    /*if (req.query.keyword) {
       keyword = db.escape('%' + req.query.keyword + '%');
       where += ` AND 
-      cll.name LIKE ${keyword} OR nickname LIKE ${keyword}
-      `; //FIXME要改
-    }
+      od.name LIKE ${keyword} 
+      `; //FIXME 因為出發點是 order_main 且已經對 order_main進行頁數限制 關鍵字搜尋會有問題
+    } */
     const t_sql = `
     SELECT COUNT(1) totalRows FROM  order_main AS om 
     ${where}`;
@@ -345,88 +345,42 @@ WHERE mfp.member_sid =?
           `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
         return res.status(200).json({ code: 200, output, message: '沒有資料' });
       }
-      /*  let sql = `SELECT
-      om.sid as main_sid,
-      om.member_sid,
-      om.amount,
-      om.buy_time,
-      om.pay_time,
-      om.method_sid,
-      om.payment,
-      om.name,
-      om.address,
-      om.phone,
-      om.email,
-      od.sid as detail_sid,
-      od.order_sid,
-      od.product_type_sid,
-      od.item_sid,
-      od.quantity
-    FROM
-     ( SELECT * FROM order_main  LIMIT ${output.perPage * (output.page - 1)},${
-        output.perPage
-      }) AS om
-    LEFT JOIN
-      (
-        SELECT 
-          od.sid,
-          od.member_sid,
-          od.item_sid,
-          od.product_type_sid ,
-          od.quantity,
-          od.order_sid,
-          CASE
-            WHEN od.product_type_sid = 1 THEN pn.product_name
-            WHEN od.product_type_sid = 2 THEN fn.food_name
-            WHEN od.product_type_sid = 3 THEN en.equipment_name
-            WHEN od.product_type_sid = 4 THEN cll.name
-          END AS name,
-          CASE
-            WHEN od.product_type_sid = 1 THEN pn.picture
-            WHEN od.product_type_sid = 2 THEN fn.picture
-            WHEN od.product_type_sid = 3 THEN en.picture
-            WHEN od.product_type_sid = 4 THEN cll.img
-          END AS picture,
-          CASE
-            WHEN od.product_type_sid = 1 THEN pn.price
-            WHEN od.product_type_sid = 2 THEN fn.price
-            WHEN od.product_type_sid = 3 THEN en.price
-            WHEN od.product_type_sid = 4 THEN cll.price
-          END AS price
-        FROM order_detail od
-        LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
-        LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
-        LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
-        LEFT JOIN (
-          SELECT cll.sid,cll.price, cll.name, clc.img AS img
-          FROM c_l_lessons cll
-          LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
-        ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid
-    
-      ${where}  `; */
+
       let sql = `SELECT
        om.sid as main_sid,
        om.member_sid,
        om.amount,
        om.buy_time,
        om.pay_time,
-       om.method_sid,
+       om.method,
        om.name as recipient,
        om.address,
        om.phone,
        om.email,
        od.sid as detail_sid,
-       od.product_type_sid AS cid,
+       od.products_type_sid AS cid,
        od.item_sid AS pid,
        od.name,
        od.picture,
        od.price,
-       od.quantity
+       od.quantity,
+       od.cllcid
      
      FROM
-     ( SELECT * FROM order_main  LIMIT ${output.perPage * (output.page - 1)},${
-        output.perPage
-      }) AS om
+     ( SELECT 
+      order_main.sid ,
+      member_sid,
+      amount,
+      buy_time,
+      pay_time,
+      method_sid,
+      order_method.Method AS method,
+      name ,
+      address,
+      phone,
+      email FROM order_main LEFT JOIN order_method ON order_method.sid = order_main.method_sid LIMIT ${
+        output.perPage * (output.page - 1)
+      },${output.perPage}) AS om
      LEFT JOIN
        (
          SELECT 
@@ -434,91 +388,97 @@ WHERE mfp.member_sid =?
            od.member_sid,
            od.item_sid,
            od.order_sid,
-           od.product_type_sid ,
+           od.products_type_sid ,
            od.quantity,
            CASE
-             WHEN od.product_type_sid = 1 THEN pn.product_name
-             WHEN od.product_type_sid = 2 THEN fn.food_name
-             WHEN od.product_type_sid = 3 THEN en.equipment_name
-             WHEN od.product_type_sid = 4 THEN cll.name
+             WHEN od.products_type_sid = 4 THEN cll.cllcid
+            END AS cllcid,
+           CASE
+             WHEN od.products_type_sid = 1 THEN pn.product_name
+             WHEN od.products_type_sid = 2 THEN fn.food_name
+             WHEN od.products_type_sid = 3 THEN en.equipment_name
+             WHEN od.products_type_sid = 4 THEN cll.name
            END AS name,
            CASE
-             WHEN od.product_type_sid = 1 THEN pn.picture
-             WHEN od.product_type_sid = 2 THEN fn.picture
-             WHEN od.product_type_sid = 3 THEN en.picture
-             WHEN od.product_type_sid = 4 THEN cll.img
+             WHEN od.products_type_sid = 1 THEN pn.picture
+             WHEN od.products_type_sid = 2 THEN fn.picture
+             WHEN od.products_type_sid = 3 THEN en.picture
+             WHEN od.products_type_sid = 4 THEN cll.img
            END AS picture,
            CASE
-             WHEN od.product_type_sid = 1 THEN pn.price
-             WHEN od.product_type_sid = 2 THEN fn.price
-             WHEN od.product_type_sid = 3 THEN en.price
-             WHEN od.product_type_sid = 4 THEN cll.price
+             WHEN od.products_type_sid = 1 THEN pn.price
+             WHEN od.products_type_sid = 2 THEN fn.price
+             WHEN od.products_type_sid = 3 THEN en.price
+             WHEN od.products_type_sid = 4 THEN cll.price
            END AS price
          FROM order_detail od
-         LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
-         LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
-         LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+         LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.products_type_sid = 1  
+         LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.products_type_sid = 2 
+         LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.products_type_sid = 3
          LEFT JOIN (
-           SELECT cll.sid,cll.price, cll.name, clc.img AS img
+           SELECT cll.sid,cll.price, cll.name,cll.category_sid as cllcid, clc.img AS img
            FROM c_l_lessons cll
            LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
-         ) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4  ) AS od  ON om.sid = od.order_sid ${where}  `;
+         ) AS cll ON cll.sid = od.item_sid AND od.products_type_sid = 4  ) AS od  ON om.sid = od.order_sid ${where}  `;
 
       /*   
 SELECT 
   od.sid,
   od.member_sid,
-  od.product_type_sid AS pts,
+  od.products_type_sid AS pts,
   od.quantity,
   CASE
-    WHEN od.product_type_sid = 1 THEN 1
-    WHEN od.product_type_sid = 2 THEN 2
-    WHEN od.product_type_sid = 3 THEN 3
-    WHEN od.product_type_sid = 4 THEN 4
-  END AS product_type_sid,
+    WHEN od.products_type_sid = 1 THEN 1
+    WHEN od.products_type_sid = 2 THEN 2
+    WHEN od.products_type_sid = 3 THEN 3
+    WHEN od.products_type_sid = 4 THEN 4
+  END AS products_type_sid,
   CASE
-    WHEN od.product_type_sid = 1 THEN pn.product_name
-    WHEN od.product_type_sid = 2 THEN fn.food_name
-    WHEN od.product_type_sid = 3 THEN en.equipment_name
-    WHEN od.product_type_sid = 4 THEN cll.name
+    WHEN od.products_type_sid = 1 THEN pn.product_name
+    WHEN od.products_type_sid = 2 THEN fn.food_name
+    WHEN od.products_type_sid = 3 THEN en.equipment_name
+    WHEN od.products_type_sid = 4 THEN cll.name
   END AS name,
   CASE
-    WHEN od.product_type_sid = 1 THEN pn.picture
-    WHEN od.product_type_sid = 2 THEN fn.picture
-    WHEN od.product_type_sid = 3 THEN en.picture
-    WHEN od.product_type_sid = 4 THEN cll.img
+    WHEN od.products_type_sid = 1 THEN pn.picture
+    WHEN od.products_type_sid = 2 THEN fn.picture
+    WHEN od.products_type_sid = 3 THEN en.picture
+    WHEN od.products_type_sid = 4 THEN cll.img
   END AS picture,
   CASE
-    WHEN od.product_type_sid = 1 THEN pn.price
-    WHEN od.product_type_sid = 2 THEN fn.price
-    WHEN od.product_type_sid = 3 THEN en.price
-    WHEN od.product_type_sid = 4 THEN cll.price
+    WHEN od.products_type_sid = 1 THEN pn.price
+    WHEN od.products_type_sid = 2 THEN fn.price
+    WHEN od.products_type_sid = 3 THEN en.price
+    WHEN od.products_type_sid = 4 THEN cll.price
   END AS price
 FROM order_detail od
-LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.product_type_sid = 1  
-LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.product_type_sid = 2 
-LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.product_type_sid = 3
+LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.products_type_sid = 1  
+LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.products_type_sid = 2 
+LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.products_type_sid = 3
 LEFT JOIN (
   SELECT cll.sid,cll.price, cll.name, clc.img AS img
   FROM c_l_lessons cll
   LEFT JOIN c_l_category clc ON cll.category_sid = clc.sid
-) AS cll ON cll.sid = od.item_sid AND od.product_type_sid = 4;
+) AS cll ON cll.sid = od.item_sid AND od.products_type_sid = 4;
 	
       */
       let rows;
       [rows] = await db.query(sql, [mid]);
+      console.log(rows);
       if (rows.length > 0) {
         const dict = {};
         let newRows = [];
         rows.forEach((el) => {
           if (dict[el.main_sid] !== el.main_sid) {
             dict[el.main_sid] = el.main_sid;
+            let pay_time = el.pay_time === null ? '未付款' : '已付款';
             newRows.push({
               main_sid: el.main_sid,
               member_sid: el.member_sid,
               amount: el.amount,
-              buy_time: dayjs(el.buy_time).format('YYYY-MM-DD-hh-mm-A'),
-              pay_time: dayjs(el.pay_time).format('YYYY-MM-DD-hh-mm-A'),
+              method: el.method,
+              buy_time: dayjs(el.buy_time).format('YY-MM-DD'),
+              pay_time: pay_time,
               method_sid: el.method_sid,
               recipient: el.recipient,
               address: el.address,
@@ -534,13 +494,14 @@ LEFT JOIN (
                   item_sid: el.item_sid,
                   picture: el.picture,
                   quantity: el.quantity,
+                  cllcid: el.cllcid,
                 },
               ],
             });
             return;
           }
           /* od.sid as detail_sid,
-       od.product_type_sid AS cid,
+       od.products_type_sid AS cid,
        od.item_sid AS pid,
        od.name,
        od.picture,
@@ -558,6 +519,7 @@ LEFT JOIN (
                 item_sid: el.item_sid,
                 picture: el.picture,
                 quantity: el.quantity,
+                cllcid: el.cllcid,
               });
             }
           });
@@ -584,7 +546,7 @@ LEFT JOIN (
     om.email,
     od.sid as detail_sid,
     od.order_sid,
-    od.product_type_sid,
+    od.products_type_sid,
     od.item_sid,
     od.quantity
   FROM

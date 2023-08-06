@@ -11,6 +11,7 @@ exports.protect = async (req, res, next) => {
     try {
       decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
       res.locals.user = decoded;
+      console.log(res.locals.user, 'protect');
       // console.log('from protect:', auth, '\n', 'decoded:', res.locals.user);
     } catch (error) {
       console.log('protect catch');

@@ -8,11 +8,12 @@ const router = express.Router();
 
 /* 寄送email的路由 */
 router.get('/send', function (req, res, next) {
-  let receiver = 'jim';
-  let content = '成功了 豪爽';
+  let url = `http://localhost:3000`;
+  let token = `ASDFSD`;
+  let receiver = `jianshenbaolei@gmail.com`;
   ejs.renderFile(
     path.resolve() + '\\views\\verify.ejs',
-    { receiver, content },
+    { url, token },
     (err, data) => {
       if (err) {
         console.log(err);
@@ -29,6 +30,7 @@ router.get('/send', function (req, res, next) {
         transporter.sendMail(mailOptions, (err, response) => {
           if (err) {
             // 失敗處理
+            console.log(err);
             return res.status(400).json({ message: 'Failure', detail: err });
           } else {
             // 成功回覆的json
@@ -41,3 +43,10 @@ router.get('/send', function (req, res, next) {
 });
 
 module.exports = router;
+/* 
+function getRandomFourDigits(min, max) {
+    return Math.floor(Math.random() * (max - min) + min)
+}
+
+console.log(getRandomFourDigits(0,9999)) 
+*/
