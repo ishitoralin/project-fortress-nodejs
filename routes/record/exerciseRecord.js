@@ -42,11 +42,18 @@ router.get(
     }
 
     const fm = 'YYYY-MM-DD';
-    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
+    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.frontBackLow, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
     WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
     ORDER BY er.exe_date DESC;`;
+
+    // let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, ebr.bodyPart_sid, et.exercise_img AS img, DATE(er.exe_date) AS date
+    // FROM record_exercise_record as er
+    // JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
+    // JOIN record_exercis_bodyPart_ref as ebr ON er.exe_type_sid = ebr.exerciseType_sid
+    // WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
+    // ORDER BY er.exe_date DESC;`;
 
     let [rows] = await db.query(sql);
 
@@ -59,7 +66,6 @@ router.get(
       row.date = moment(row.date).format(fm);
       return row;
     });
-    // console.log(rows);
     output.success = true;
     output.data = rows;
     res.json(output);
@@ -121,7 +127,7 @@ router.get(
     const output = {
       success: false,
       error: '',
-      data: null,
+      data: 0,
     };
     // const sid = parseInt(res.locals.memberId);
 
@@ -159,16 +165,18 @@ router.get(
       return res.status(200).json(output);
     }
 
+    //>>> 計算volumn, 加入rows
     rows = rows.map((row) => {
       row.date = moment(row.date).format(fm);
-      // calc volumn
       row = {
         ...row,
         volumn: Number(row.quantity * row.reps * row.sets).toFixed(1),
       };
       return row;
     });
+    //<<< 計算volumn, 加入rows
 
+    //>>> 累加同一天的相同運動volumn
     rows = rows.reduce((acc, cur) => {
       const { member_sid, typeID, name, date, volumn } = cur;
       const curObj = { member_sid, typeID, name, date, volumn };
@@ -180,8 +188,7 @@ router.get(
       }
       return acc;
     }, []);
-
-    // console.log(rows);
+    //<<< 累加同一天的相同運動volumn
     output.success = true;
     output.data = rows;
     res.json(output);
