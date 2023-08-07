@@ -51,7 +51,6 @@ router.get('/', getUser, async (req, res) => {
     queryItems: [],
   };
 
-  // return res.json(req.query);
   const {
     location,
     keyword,
@@ -134,10 +133,17 @@ router.get('/', getUser, async (req, res) => {
   // add save column for lesson
   if (sid) {
     const saveLessonsId = await getSavesLessons(sid);
-    lessons.forEach(
-      (lesson) => (lesson.save = saveLessonsId.has(lesson.sid) ? true : false)
-    );
+    lessons.forEach((lesson) => (lesson.save = saveLessonsId.has(lesson.sid)));
   }
+
+  const enrolledData = await getEnrolledCount();
+  lessons.forEach((lesson) => {
+    if (!enrolledData.has(lesson.sid)) return;
+    lesson.enrolled =
+      enrolledData.get(lesson.sid) > lesson.capacity
+        ? lesson.capacity
+        : enrolledData.get(lesson.sid);
+  });
 
   // format lesson time
   lessons.forEach(
@@ -172,6 +178,13 @@ const getSavesLessons = async (sid) => {
   const sql = `SELECT lesson_sid FROM member_favorite_lessons WHERE member_sid = ${sid}`;
   const [datas] = await db.query(sql);
   return new Set(datas.map((data) => data.lesson_sid));
+};
+
+const getEnrolledCount = async () => {
+  const sql =
+    'SELECT item_sid as lesson_sid, SUM(quantity) as count FROM order_detail WHERE products_type_sid = 4 GROUP BY item_sid';
+  const [datas] = await db.query(sql);
+  return new Map(datas.map((data) => [data.lesson_sid, parseInt(data.count)]));
 };
 
 module.exports = router;
