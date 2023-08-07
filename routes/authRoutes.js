@@ -256,10 +256,14 @@ router
         [email]
       );
       if (result['COUNT(1)'] < 1) {
-        return res.status(200).json({ code: 200, message: '此信箱沒有註冊' });
+        return res
+          .status(200)
+          .json({ code: 200, message: '請確認信箱是否正確。' });
       }
     } catch (error) {
-      return res.status(200).json({ code: 200, message: '此信箱沒有註冊!' });
+      return res
+        .status(200)
+        .json({ code: 200, message: '請確認信箱是否正確!' });
     }
     //往db加入token 如果email重複了 就會update token
     function getRandomFourDigits(min, max) {
@@ -301,11 +305,35 @@ router
               return res.status(400).json({ message: 'Failure', detail: err });
             } else {
               // 成功回覆的json
-              res.status(200).json({ code: 200, message: 'token發送成功' });
+              res
+                .status(200)
+                //TODO token 要拿掉
+                .json({ code: 200, message: 'token發送成功', token });
             }
           });
         }
       }
     );
+  })
+  .patch('/reset-password', async (req, res, next) => {
+    const { email, token, resetPassword } = req.body;
+    if (!email || !token || !resetPassword) {
+      return res.status(200).json({ code: 200, message: '請輸入必要資訊' });
+    }
+
+    const [[result]] = await db.query(
+      `SELECT COUNT(1) FROM member_reset_token WHERE email = ?  AND token = ?`,
+      [email, token]
+    );
+    if (!result['COUNT(1)']) {
+      return res.status(200).json({ code: 200, message: '資訊有誤' });
+    }
+    const hashResetPassword = await bcrypt.hash(resetPassword, 10);
+    const [resultForUpdate] = await db.query(
+      `UPDATE member SET password = ? WHERE email = ? `,
+      [hashResetPassword, email]
+    );
+    console.log(resultForUpdate['affectedRows']);
+    res.status(200).json({ message: '密碼變更成功' });
   });
 module.exports = router;

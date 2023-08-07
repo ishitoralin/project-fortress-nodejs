@@ -378,7 +378,7 @@ WHERE mfp.member_sid =?
       name ,
       address,
       phone,
-      email FROM order_main LEFT JOIN order_method ON order_method.sid = order_main.method_sid LIMIT ${
+      email FROM order_main LEFT JOIN order_method ON order_method.sid = order_main.method_sid  ORDER BY order_main.buy_time DESC LIMIT ${
         output.perPage * (output.page - 1)
       },${output.perPage}) AS om
      LEFT JOIN
@@ -412,7 +412,7 @@ WHERE mfp.member_sid =?
              WHEN od.products_type_sid = 4 THEN cll.price
            END AS price
          FROM order_detail od
-         LEFT JOIN product_name pn ON pn.sid = od.item_sid AND od.products_type_sid = 1  
+         LEFT JOIN product_name pn  ON pn.sid = od.item_sid AND od.products_type_sid = 1 
          LEFT JOIN food_name fn ON fn.sid = od.item_sid AND od.products_type_sid = 2 
          LEFT JOIN equipment_name en ON en.sid = od.item_sid AND od.products_type_sid = 3
          LEFT JOIN (
