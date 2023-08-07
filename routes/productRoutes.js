@@ -54,7 +54,7 @@ router
     p.picture,
     p.created_at FROM ${category}_name AS p;`;
     [rows] = await db.query(sql);
-    console.log(rows);
+    // console.log(rows);
     if (rows.length > 0) {
       rows.forEach((element) => {
         element['created_at'] = dayjs(element['created_at']).format(

@@ -54,7 +54,7 @@ router.get('/exercise-type/body-part/:sid/:keyword?', async (req, res) => {
     where += ` AND ebRef.bodyPart_sid =${sid} AND (et.exercise_name LIKE ${kw_escaped} OR et.exercise_description LIKE ${kw_escaped} )`;
   }
 
-  console.log(where);
+  // console.log(where);
 
   sql += where;
   let [rows] = await db.query(sql);
@@ -71,7 +71,7 @@ router.get('/exercise-type/body-part/:sid/:keyword?', async (req, res) => {
 
 //>>> test
 router.get('/test/:sid/:test?', async (req, res) => {
-  console.log(req.params.sid, '/n', req.params?.test);
+  // console.log(req.params.sid, '/n', req.params?.test);
   res.json([]);
 });
 //<<< test

@@ -54,12 +54,11 @@ FROM
   WHERE l.category_sid = c.sid) AS ln ON oc.products_type_sid = 4
   AND oc.item_sid = ln.sid
 WHERE
-  oc.member_sid = ?;`;
+  oc.member_sid = ?`;
 
   let rows;
   [rows] = await db.query(query, [sid]);
   const data = rows;
-  console.log(data);
   res.status(200).json({ code: 200, data });
 });
 

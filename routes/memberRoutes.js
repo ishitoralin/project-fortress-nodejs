@@ -12,7 +12,7 @@ router
   .get('/', async (req, res) => {
     // req.locals.user = {sid:1,};
     // const { id } = req.locals.user;
-    console.log(res.locals.user);
+    // console.log(res.locals.user);
     const { sid } = res.locals.user;
     if (!sid) {
       return res.status(200).json({ code: 200, message: '沒有資料' });
@@ -58,16 +58,16 @@ router
     mobile=?, birth=?, address=?, sex_sid= ? WHERE sid = ?;`;
     let rows;
     rows = await db.query(sql, [mobile, birth, address, sex, sid]);
-    console.log(rows[0].affectedRows);
+    // console.log(rows[0].affectedRows);
     res.status(200).json({ message: '修改成功' });
     // .json({ code: 200, data: rows[0], message: '有資料' });
   })
   //上傳單張
   .patch('/icon', upload.single('avatar'), async (req, res, next) => {
     const { sid } = res.locals.user;
-    console.log(req.file.filename);
+    // console.log(req.file.filename);
     let sql = `UPDATE member SET hero_icon = '${req.file.filename}' WHERE sid =?`;
-    console.log(sql);
+    // console.log(sql);
     await db.query(sql, [sid]);
     res.status(200).json({
       code: 200,
@@ -197,7 +197,7 @@ WHERE mfl.member_sid = ?`;
   .delete('/member-favorite-courses', async (req, res, next) => {
     const { sid: lid } = req.body;
     const { sid: mid } = res.locals.user;
-    console.log(lid, mid);
+    // console.log(lid, mid);
     let sql = `DELETE FROM member_favorite_lessons WHERE member_favorite_lessons.lesson_sid = ${lid} AND member_favorite_lessons.member_sid = ?`;
     try {
       const rows = await db.query(sql, [mid]);
@@ -292,7 +292,7 @@ WHERE mfp.member_sid =?
   .delete('/member-favorite-products', async (req, res, next) => {
     const { pid, cid } = req.body;
     const { sid: mid } = res.locals.user;
-    console.log(pid, cid, mid);
+    // console.log(pid, cid, mid);
     let sql = `DELETE FROM member_favorite_products WHERE ( member_favorite_products.product_sid = ? ) AND ( member_favorite_products.category_sid= ? ) AND  ( member_favorite_products.member_sid= ? )`;
     try {
       const rows = await db.query(sql, [pid, cid, mid]);

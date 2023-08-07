@@ -145,7 +145,7 @@ router
       `SELECT COUNT(1) FROM member WHERE member.email = ? `,
       [email]
     );
-    console.log(emailCheck?.['COUNT(1)'] ? '帳號重複' : '');
+    // console.log(emailCheck?.['COUNT(1)'] ? '帳號重複' : '');
 
     if (emailCheck?.['COUNT(1)'] > 0) {
       return res.status(200).json({ code: 200, message: '信箱已註冊' });
@@ -204,7 +204,7 @@ router
 
       //放入accessToken進json 前端接住丟進state內
       // user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
-      console.log('google login work');
+      // console.log('google login work');
       return res.status(200).json({
         code: 200,
         accessToken,
