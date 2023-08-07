@@ -170,7 +170,11 @@ WHERE mfl.member_sid = ?`;
       [rows] = await db.query(sql, [mid]);
       if (rows.length > 0) {
         rows = rows.map((el) => {
-          return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
+          return {
+            ...el,
+            time: dayjs(el.time).format('YYYY-MM-DD'),
+            img: `http://localhost:${process.env.PORT}/imgs/lesson/lessons-img/${el.img}`,
+          };
         });
         output.rows = rows;
         return res.status(200).json({ code: 200, output, message: '有資料' });
