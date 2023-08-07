@@ -42,11 +42,18 @@ router.get(
     }
 
     const fm = 'YYYY-MM-DD';
-    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
+    let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.frontBackLow, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, et.exercise_img AS img, DATE(er.exe_date) AS date
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
     WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
     ORDER BY er.exe_date DESC;`;
+
+    // let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, ebr.bodyPart_sid, et.exercise_img AS img, DATE(er.exe_date) AS date
+    // FROM record_exercise_record as er
+    // JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
+    // JOIN record_exercis_bodyPart_ref as ebr ON er.exe_type_sid = ebr.exerciseType_sid
+    // WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
+    // ORDER BY er.exe_date DESC;`;
 
     let [rows] = await db.query(sql);
 
@@ -59,7 +66,6 @@ router.get(
       row.date = moment(row.date).format(fm);
       return row;
     });
-    // console.log(rows);
     output.success = true;
     output.data = rows;
     res.json(output);
@@ -183,8 +189,6 @@ router.get(
       return acc;
     }, []);
     //<<< 累加同一天的相同運動volumn
-
-    // console.log(rows);
     output.success = true;
     output.data = rows;
     res.json(output);
