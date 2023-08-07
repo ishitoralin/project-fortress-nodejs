@@ -9,7 +9,6 @@ const router = express.Router();
 // /:sid指的是產品sid，並非會員
 router.put('/:sid', async (req, res) => {
   const sid = req.params?.sid;
-  //   console.log('hello');
 
   if (!sid || isNaN(sid)) {
     return res.status(404).json({ error: '無效的id' });

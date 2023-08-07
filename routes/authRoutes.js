@@ -12,8 +12,8 @@ const router = express.Router();
 router
   .get('/check-auth', getUser, (req, res, next) => {
     //#region 喚起前端初次載入app時refresh token的logic
-    console.log('check-auth work');
-    console.log(res?.locals?.user);
+    // console.log('check-auth work');
+    // console.log(res?.locals?.user);
     if (res?.locals?.user) {
       return res.status(200).json({ code: 200, message: '已登入' });
     } else {
@@ -49,7 +49,7 @@ router
       ]);
       if (rows.length > 0) {
         user = rows[0];
-        console.log(user);
+        // console.log(user);
         //issue accessToken 並回傳使用者資料
         accessToken = jwt.sign(
           {
@@ -141,7 +141,7 @@ router
       `SELECT COUNT(1) FROM member WHERE member.email = ? `,
       [email]
     );
-    console.log(emailCheck?.['COUNT(1)'] ? '帳號重複' : '');
+    // console.log(emailCheck?.['COUNT(1)'] ? '帳號重複' : '');
 
     if (emailCheck?.['COUNT(1)'] > 0) {
       return res.status(200).json({ code: 200, message: '信箱已註冊' });
@@ -200,7 +200,7 @@ router
 
       //放入accessToken進json 前端接住丟進state內
       // user.hero_icon = `${user.hero_icon === 'null' ? '' : user.hero_icon}`;
-      console.log('google login work');
+      // console.log('google login work');
       return res.status(200).json({
         code: 200,
         accessToken,

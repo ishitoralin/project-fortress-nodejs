@@ -27,7 +27,6 @@ router.get('/', async (req, res) => {
   });
   const shuffledData = shuffleArray(data);
   const newData = shuffledData.splice(0, 10);
-  console.log(newData);
   res.status(200).json({ code: 200, newData });
 });
 

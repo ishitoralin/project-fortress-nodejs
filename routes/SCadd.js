@@ -4,14 +4,11 @@ const db = require(__dirname + '/../modules/connectDB.js');
 require('dayjs/locale/zh-tw');
 const { protect } = require(__dirname + '/../modules/auth.js');
 const router = express.Router();
-// TODO 從前端送req.body過來，須包含所有order cart欄位資料
-// postman用post
 
 router.use(protect);
 router.post('/', async (req, res) => {
   const { sid: member_sid } = res.locals.user;
   const { products_type_sid, item_sid, quantity } = req.body;
-  console.log(products_type_sid, item_sid, quantity);
   if (!products_type_sid || !item_sid || isNaN(quantity)) {
     return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
   }
@@ -38,7 +35,6 @@ router.post('/', async (req, res) => {
       // const [result] = await db.query(query, [5, 1, 1, 1]);
       const data = result;
 
-      console.log(data);
       res.status(200).json({ code: 200, data });
     } catch (err) {
       console.error(err);
@@ -53,7 +49,6 @@ router.post('/', async (req, res) => {
     // 找出舊資料的quantity
     const oldQuantity = await db.query(oldData2, []);
     const [quantity2] = oldQuantity;
-    console.log([quantity2][0][0]['quantity']);
     const query = `UPDATE
     order_cart
   SET

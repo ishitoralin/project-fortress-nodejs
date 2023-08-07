@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.delete('/:sid', async (req, res) => {
   const order_sid = req.params?.sid;
-  console.log(order_sid);
   if (!order_sid) {
     return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
   }
@@ -17,7 +16,6 @@ router.delete('/:sid', async (req, res) => {
     // const [result] = await db.query(query, [order_sid]);
     const [result] = await db.query(query, [order_sid]);
     const data = result;
-    console.log(data);
     res.status(200).json({ code: 200, data });
   } catch (err) {
     console.error(err);
