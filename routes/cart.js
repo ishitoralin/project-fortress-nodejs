@@ -55,11 +55,15 @@ FROM
   AND oc.item_sid = ln.sid
 WHERE
   oc.member_sid = ?`;
-
-  let rows;
-  [rows] = await db.query(query, [sid]);
-  const data = rows;
-  res.status(200).json({ code: 200, data });
+  try {
+    let rows;
+    [rows] = await db.query(query, [sid]);
+    const data = rows;
+    res.status(200).json({ code: 200, data });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json('資料擷取失敗');
+  }
 });
 
 module.exports = router;
