@@ -9,12 +9,12 @@ router.post('/', async (req, res) => {
   // db暫時不存宅配方式deliveryMethod
   const { name, address, phone, email, deliveryMethod, paymentMethod } =
     req.body;
+  console.log(name, address, phone, email, deliveryMethod, paymentMethod);
   if (!name || !address || !phone || !email) {
     return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
   }
   // 先找到要插入收件人資訊的欄位sid
   const targetInfo = `SELECT sid FROM order_main WHERE member_sid=${member_sid} order by  buy_time DESC LIMIT 1`;
-  console.log(deliveryMethod);
   const [sid] = await db.query(targetInfo, []);
   const data = sid[0].sid;
 
