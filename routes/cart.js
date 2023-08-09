@@ -6,13 +6,14 @@ const router = express.Router();
 // postman用get
 const { protect } = require(__dirname + '/../modules/auth.js');
 router.use(protect);
-router.get('/', async (req, res) => {
-  const { sid } = res.locals.user;
-  if (!sid || isNaN(sid)) {
-    return res.status(404).json({ error: '無效的id' });
-  }
-
-  const query = `SELECT
+router
+  .get('/', async (req, res) => {
+    const { sid } = res.locals.user;
+    if (!sid || isNaN(sid)) {
+      return res.status(404).json({ error: '無效的id' });
+    }
+    // const sid = 5;
+    const query = `SELECT
   oc.sid,
   oc.member_sid,
   oc.products_type_sid,
@@ -55,15 +56,23 @@ FROM
   AND oc.item_sid = ln.sid
 WHERE
   oc.member_sid = ?`;
-  try {
-    let rows;
-    [rows] = await db.query(query, [sid]);
-    const data = rows;
-    res.status(200).json({ code: 200, data });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json('資料擷取失敗');
-  }
-});
+    try {
+      let rows;
+      [rows] = await db.query(query, [sid]);
+      const data = rows;
+      res.status(200).json({ code: 200, data });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json('資料擷取失敗');
+    }
+  })
+
+  .get('/sendingPdf', async (req, res) => {
+    const { sid } = res.locals.user;
+    console.log('hello world');
+    if (!sid || isNaN(sid)) {
+      return res.status(404).json({ error: '無效的id' });
+    }
+  });
 
 module.exports = router;

@@ -21,6 +21,8 @@ router.post('/', async (req, res) => {
   // 把資訊塞進對應的欄位
   const query = `UPDATE order_main SET method_sid=?,name=?,address=?,phone=?,email=? WHERE member_sid=${member_sid} AND sid = ${data};`;
 
+
+  
   try {
     const [rows] = await db.query(query, [
       paymentMethod,
