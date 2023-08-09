@@ -1,6 +1,9 @@
 const express = require('express');
 const db = require(__dirname + '/../modules/connectDB.js');
 require('dayjs/locale/zh-tw');
+const ejs = require('ejs');
+const path = require('path');
+const transporter = require('../config/mail.js');
 const router = express.Router();
 // 從資料庫抓取資料，購物車顯示商品
 // postman用get
@@ -73,6 +76,39 @@ WHERE
     if (!sid || isNaN(sid)) {
       return res.status(404).json({ error: '無效的id' });
     }
+  })
+  .get('/test', async (req, res) => {
+    let url = 'http://localhost:3000/';
+    let receiver = 'miraculous0218@hotmail.com';
+    ejs.renderFile(
+      path.resolve() + '\\views\\sendingEmail.ejs',
+      { url },
+      (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          // email內容
+          const mailOptions = {
+            from: `${process.env.SMTP_TO_EMAIL}`,
+            to: `${receiver}`,
+            subject: '健身堡壘--訂單成立',
+            html: data,
+          };
+
+          // 寄送
+          transporter.sendMail(mailOptions, (err, response) => {
+            if (err) {
+              // 失敗處理
+              console.log(err);
+              return res.status(400).json({ message: 'Failure', detail: err });
+            } else {
+              // 成功回覆的json
+              res.status(200).json({ code: 200 });
+            }
+          });
+        }
+      }
+    );
   });
 
 module.exports = router;
