@@ -288,6 +288,38 @@ WHERE mfp.member_sid =?
       orderBy: '',
       rows: [],
     };
+
+    output.page = req.query.page ? parseInt(req.query.page) : 1;
+    if (!output.page || output.page < 1) {
+      output.redirect = req.baseUrl;
+      return res.status(404).json({ code: 404, output, message: '沒有資料' });
+    }
+    let where = ' WHERE 1 AND mfp.member_sid =? ';
+    let keyword;
+    if (req.query.keyword) {
+      keyword = db.escape('%' + req.query.keyword + '%');
+      where += ` AND (pn.product_name LIKE ${keyword}  OR fn.food_name LIKE ${keyword}  OR en.equipment_name LIKE ${keyword} )
+      `;
+    }
+    //價格範圍搜尋
+    let { price } = req.query;
+    console.log(price);
+    if (
+      Array.isArray(price) &&
+      price?.length === 2 &&
+      !isNaN(parseInt(price[0])) &&
+      !isNaN(parseInt(price[1]))
+    ) {
+      price[0] = parseInt(price[0]);
+      price[1] = parseInt(price[1]);
+      price.sort();
+      where += `AND ((pn.price BETWEEN ${price[0]} AND ${price[1]} ) OR (fn.price BETWEEN ${price[0]} AND ${price[1]}) OR (en.price BETWEEN ${price[0]} AND ${price[1]}) )`;
+    }
+    if (!isNaN(parseInt(req.query.category))) {
+      where += `AND mfp.category_sid = ${req.query.category}`;
+    }
+
+    //排序
     let orderBy;
     switch (req.query.orderBy) {
       case `priiceDesc`:
@@ -297,20 +329,6 @@ WHERE mfp.member_sid =?
       default:
         output.orderBy, (orderBy = `ORDER BY price ASC`);
         break;
-    }
-    output.page = req.query.page ? parseInt(req.query.page) : 1;
-    if (!output.page || output.page < 1) {
-      output.redirect = req.baseUrl;
-      return res.status(404).json({ code: 404, output, message: '沒有資料' });
-    }
-    let where = ' WHERE 1 AND mfp.member_sid =? ';
-    //排序
-
-    let keyword;
-    if (req.query.keyword) {
-      keyword = db.escape('%' + req.query.keyword + '%');
-      where += ` AND (pn.product_name LIKE ${keyword}  OR fn.food_name LIKE ${keyword}  OR en.equipment_name LIKE ${keyword} )
-      `;
     }
     const t_sql = `SELECT COUNT(1)FROM (SELECT mfp.sid , 
       CASE
@@ -397,7 +415,12 @@ ${where} ${orderBy} LIMIT ${output.perPage * (output.page - 1)}, ${
     [rows] = await db.query(sql, [sid]);
     if (rows.length > 0) {
       rows = rows.map((el) => {
-        return { ...el, picture: el.picture?.split(',')[0] };
+        return {
+          ...el,
+          picture: `http://localhost:${process.env.PORT}/imgs/product/${
+            el.picture?.split(',')[0]
+          }`,
+        };
       });
       output.rows = rows;
       return res.status(200).json({ code: 200, output, message: '有資料' });
