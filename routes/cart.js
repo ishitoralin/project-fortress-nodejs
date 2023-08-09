@@ -9,6 +9,7 @@ const router = express.Router();
 // postman用get
 const { protect } = require(__dirname + '/../modules/auth.js');
 router.use(protect);
+// 匯data進購物車
 router
   .get('/', async (req, res) => {
     const { sid } = res.locals.user;
