@@ -174,7 +174,7 @@ router
           `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
         return res.status(404).json({ code: 404, output, message: '沒有資料' });
       }
-      const sql = ` SELECT * FROM ${category}_name ${where} LIMIT ${
+      const sql = ` SELECT *,${category}_name as name FROM ${category}_name ${where} LIMIT ${
         output.perPage * (output.page - 1)
       }, ${output.perPage}`;
       //   console.log(sql);
