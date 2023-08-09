@@ -274,6 +274,133 @@ WHERE mfp.member_sid =?
 
     return res.status(200).json({ code: 200, message: '沒有資料' });
   })
+  .get('/member-favorite-products2', async (req, res, next) => {
+    let output = {
+      redirect: '',
+      totalRows: 0,
+      perPage: 6,
+      totalPages: 0,
+      page: 1,
+      orderBy: '',
+      rows: [],
+    };
+    let orderBy;
+    switch (req.query.orderBy) {
+      case `priiceDesc`:
+        output.orderBy, (orderBy = `ORDER BY price DESC`);
+        break;
+
+      default:
+        output.orderBy, (orderBy = `ORDER BY price ASC`);
+        break;
+    }
+    output.page = req.query.page ? parseInt(req.query.page) : 1;
+    if (!output.page || output.page < 1) {
+      output.redirect = req.baseUrl;
+      return res.status(404).json({ code: 404, output, message: '沒有資料' });
+    }
+    let where = ' WHERE 1 AND mfp.member_sid =? ';
+    //排序
+
+    let keyword;
+    if (req.query.keyword) {
+      keyword = db.escape('%' + req.query.keyword + '%');
+      where += ` AND (pn.product_name LIKE ${keyword}  OR fn.food_name LIKE ${keyword}  OR en.equipment_name LIKE ${keyword} )
+      `;
+    }
+    const t_sql = `SELECT COUNT(1)FROM (SELECT mfp.sid , 
+      CASE
+      WHEN mfp.category_sid = 1 THEN 1
+      WHEN mfp.category_sid = 2 THEN 2
+      WHEN mfp.category_sid = 3 THEN 3
+         END AS category_sid  ,
+      CASE
+      WHEN mfp.category_sid = 1 THEN pn.sid
+      WHEN mfp.category_sid = 2 THEN fn.sid
+      WHEN mfp.category_sid = 3 THEN en.sid
+         END AS prdouct_sid  ,
+      CASE
+      WHEN mfp.category_sid = 1 THEN pn.product_name
+      WHEN mfp.category_sid = 2 THEN fn.food_name
+      WHEN mfp.category_sid = 3 THEN en.equipment_name
+         END AS name  ,
+  CASE
+      WHEN mfp.category_sid = 1 THEN pn.picture
+      WHEN mfp.category_sid = 2 THEN fn.picture
+      WHEN mfp.category_sid = 3 THEN en.picture
+         END AS picture  ,
+  CASE
+      WHEN mfp.category_sid = 1 THEN pn.price
+      WHEN mfp.category_sid = 2 THEN fn.price
+      WHEN mfp.category_sid = 3 THEN en.price
+         END AS price 
+  FROM member_favorite_products  AS mfp
+  LEFT JOIN product_name AS pn ON mfp.product_sid = pn.sid AND mfp.category_sid = 1
+  LEFT JOIN food_name AS fn ON mfp.product_sid = fn.sid AND mfp.category_sid = 2
+  LEFT JOIN equipment_name AS en ON mfp.product_sid = en.sid AND mfp.category_sid = 3
+  ${where}) AS t
+      `;
+    const { sid } = res.locals.user;
+    const [[{ 'COUNT(1)': totalRows }]] = await db.query(t_sql, [sid]);
+    if (totalRows) {
+      output.totalRows = totalRows;
+      output.totalPages = Math.ceil(totalRows / output.perPage);
+      if (output.page > output.totalPages) {
+        output.redirect =
+          req.baseUrl +
+          req.path +
+          '?page=' +
+          output.totalPages +
+          `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
+        return res.status(200).json({ code: 200, output, message: '沒有資料' });
+      }
+    }
+    let sql = `SELECT mfp.sid , 
+    CASE
+    WHEN mfp.category_sid = 1 THEN 1
+    WHEN mfp.category_sid = 2 THEN 2
+    WHEN mfp.category_sid = 3 THEN 3
+       END AS category_sid  ,
+    CASE
+    WHEN mfp.category_sid = 1 THEN pn.sid
+    WHEN mfp.category_sid = 2 THEN fn.sid
+    WHEN mfp.category_sid = 3 THEN en.sid
+          END AS product_sid  ,
+    CASE
+    WHEN mfp.category_sid = 1 THEN pn.product_name
+    WHEN mfp.category_sid = 2 THEN fn.food_name
+    WHEN mfp.category_sid = 3 THEN en.equipment_name
+       END AS name  ,
+CASE
+    WHEN mfp.category_sid = 1 THEN pn.picture
+    WHEN mfp.category_sid = 2 THEN fn.picture
+    WHEN mfp.category_sid = 3 THEN en.picture
+       END AS picture  ,
+CASE
+    WHEN mfp.category_sid = 1 THEN pn.price
+    WHEN mfp.category_sid = 2 THEN fn.price
+    WHEN mfp.category_sid = 3 THEN en.price
+       END AS price 
+FROM member_favorite_products  AS mfp
+LEFT JOIN product_name AS pn ON mfp.product_sid = pn.sid AND mfp.category_sid = 1
+LEFT JOIN food_name AS fn ON mfp.product_sid = fn.sid AND mfp.category_sid = 2
+LEFT JOIN equipment_name AS en ON mfp.product_sid = en.sid AND mfp.category_sid = 3
+${where} ${orderBy} LIMIT ${output.perPage * (output.page - 1)}, ${
+      output.perPage
+    } 
+`;
+    let rows;
+    [rows] = await db.query(sql, [sid]);
+    if (rows.length > 0) {
+      rows = rows.map((el) => {
+        return { ...el, picture: el.picture?.split(',')[0] };
+      });
+      output.rows = rows;
+      return res.status(200).json({ code: 200, output, message: '有資料' });
+    }
+
+    return res.status(200).json({ code: 200, message: '沒有資料' });
+  })
   //新增最愛商品
   .post('/member-favorite-products', async (req, res, next) => {
     const { sid } = res.locals.user;
