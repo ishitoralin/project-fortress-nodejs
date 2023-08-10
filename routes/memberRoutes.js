@@ -130,7 +130,7 @@ WHERE mfl.member_sid = ?`;
     if (!output.page || output.page < 1) {
       output.redirect = req.baseUrl + req.path;
 
-      return res.status(404).json({ code: 200, output, message: '沒有資料' });
+      return res.status(200).json({ code: 200, output, message: '沒有資料' });
     }
     const { sid: mid } = res.locals.user;
 
@@ -170,7 +170,11 @@ WHERE mfl.member_sid = ?`;
       [rows] = await db.query(sql, [mid]);
       if (rows.length > 0) {
         rows = rows.map((el) => {
-          return { ...el, time: dayjs(el.time).format('YYYY-MM-DD') };
+          return {
+            ...el,
+            time: dayjs(el.time).format('YYYY-MM-DD'),
+            img: `http://localhost:${process.env.PORT}/imgs/lesson/lessons-img/${el.img}`,
+          };
         });
         output.rows = rows;
         return res.status(200).json({ code: 200, output, message: '有資料' });
@@ -190,7 +194,7 @@ WHERE mfl.member_sid = ?`;
       await db.query(sql, [sid, lsid]);
       res.status(200).json({ code: 200, message: '新增最愛課程成功' });
     } catch (error) {
-      res.status(404).json({ code: 404, message: '新增最愛課程失敗' });
+      res.status(200).json({ code: 200, message: '新增最愛課程失敗' });
     }
   })
   //刪除會員最愛課程
@@ -206,7 +210,7 @@ WHERE mfl.member_sid = ?`;
       }
       res.status(200).json({ code: 200, message: '刪除最愛課程成功' });
     } catch (error) {
-      res.status(404).json({ code: 404, message: '刪除最愛課程失敗' });
+      res.status(200).json({ code: 200, message: '刪除最愛課程失敗' });
     }
   })
   .get('/member-favorite-products/:cid/:pid', async (req, res, next) => {
@@ -223,18 +227,6 @@ WHERE mfl.member_sid = ?`;
     res.status(200).json({ code: 200, favorite, message });
   })
   .get('/member-favorite-products', async (req, res, next) => {
-    /* let output = {
-      redirect: '',
-      totalRows: 0,
-      perPage: 12,
-      totalPages: 0,
-      page: 1,
-    };
-    output.page = req.query.page ? parseInt(req.query.page) : 1;
-    if (!output.page || output.page < 1) {
-      output.redirect = req.baseUrl;
-      return res.status(404).json({ code: 404, output, message: '沒有資料' });
-    } */
     const { sid } = res.locals.user;
     let sql = `SELECT mfp.sid , 
     CASE
@@ -275,6 +267,7 @@ WHERE mfp.member_sid =?
     return res.status(200).json({ code: 200, message: '沒有資料' });
   })
   .get('/member-favorite-products2', async (req, res, next) => {
+    console.log(req.query);
     let output = {
       redirect: '',
       totalRows: 0,
@@ -287,8 +280,9 @@ WHERE mfp.member_sid =?
 
     output.page = req.query.page ? parseInt(req.query.page) : 1;
     if (!output.page || output.page < 1) {
-      output.redirect = req.baseUrl;
-      return res.status(404).json({ code: 404, output, message: '沒有資料' });
+      output.page = 1;
+      output.redirect = req.baseUrl + req.path + '?page=1';
+      return res.status(200).json({ code: 200, output, message: 'redirect' });
     }
     let where = ' WHERE 1 AND mfp.member_sid =? ';
     let keyword;
@@ -299,7 +293,7 @@ WHERE mfp.member_sid =?
     }
     //價格範圍搜尋
     let { price } = req.query;
-    console.log(price);
+
     if (
       Array.isArray(price) &&
       price?.length === 2 &&
@@ -308,7 +302,10 @@ WHERE mfp.member_sid =?
     ) {
       price[0] = parseInt(price[0]);
       price[1] = parseInt(price[1]);
-      price.sort();
+      price.sort(function (a, b) {
+        return parseInt(a) - parseInt(b) > 0 ? 1 : -1;
+      });
+      console.log(price);
       where += `AND ((pn.price BETWEEN ${price[0]} AND ${price[1]} ) OR (fn.price BETWEEN ${price[0]} AND ${price[1]}) OR (en.price BETWEEN ${price[0]} AND ${price[1]}) )`;
     }
     if (!isNaN(parseInt(req.query.category))) {
@@ -370,7 +367,7 @@ WHERE mfp.member_sid =?
           '?page=' +
           output.totalPages +
           `${keyword ? `&keyword=${req.query.keyword}` : ''}`;
-        return res.status(200).json({ code: 200, output, message: '沒有資料' });
+        return res.status(200).json({ code: 200, output, message: 'redirect' });
       }
     }
     let sql = `SELECT mfp.sid , 
@@ -435,7 +432,7 @@ ${where} ${orderBy} LIMIT ${output.perPage * (output.page - 1)}, ${
       await db.query(sql, [sid, csid, psid]);
       res.status(200).json({ code: 200, message: '新增最愛商品成功' });
     } catch (error) {
-      res.status(404).json({ code: 404, message: '新增最愛商品失敗' });
+      res.status(200).json({ code: 200, message: '新增最愛商品失敗' });
     }
   })
   //刪除最愛商品
@@ -451,7 +448,7 @@ ${where} ${orderBy} LIMIT ${output.perPage * (output.page - 1)}, ${
       }
       res.status(200).json({ code: 200, message: '刪除最愛商品成功' });
     } catch (error) {
-      res.status(404).json({ code: 404, message: '刪除最愛商品失敗' });
+      res.status(200).json({ code: 200, message: '刪除最愛商品失敗' });
     }
   })
   .get('/my-orders', async (req, res, next) => {
@@ -467,7 +464,7 @@ ${where} ${orderBy} LIMIT ${output.perPage * (output.page - 1)}, ${
     if (!output.page || output.page < 1) {
       output.redirect = req.baseUrl + req.path;
 
-      return res.status(404).json({ code: 200, output, message: '沒有資料' });
+      return res.status(200).json({ code: 200, output, message: '沒有資料' });
     }
     const { sid: mid } = res.locals.user;
 
