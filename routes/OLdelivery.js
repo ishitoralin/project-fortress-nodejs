@@ -19,10 +19,8 @@ router.post('/', async (req, res) => {
   const data = sid[0].sid;
 
   // 把資訊塞進對應的欄位
-  const query = `UPDATE order_main SET method_sid=?,name=?,address=?,phone=?,email=? WHERE member_sid=${member_sid} AND sid = ${data};`;
+  const query = `UPDATE order_main SET pay_time=NOW(),method_sid=?,name=?,address=?,phone=?,email=?,orderNumber=NOW() WHERE member_sid=${member_sid} AND sid = ${data};`;
 
-
-  
   try {
     const [rows] = await db.query(query, [
       deliveryMethod,
