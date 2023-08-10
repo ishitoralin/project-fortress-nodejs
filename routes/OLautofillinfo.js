@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
   if (!member_sid || isNaN(member_sid)) {
     return res.status(404).json({ error: '無效的id' });
   }
+  // const query = `SELECT email, name, mobile,address,'0'AS paymentMethod FROM member WHERE sid = ${member_sid};`;
   const query = `SELECT email, name, mobile,address FROM member WHERE sid = ${member_sid};`;
 
   const [rows] = await db.query(query, []);

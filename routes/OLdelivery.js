@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
   
   try {
     const [rows] = await db.query(query, [
-      paymentMethod,
+      deliveryMethod,
       name,
       address,
       phone,

@@ -12,13 +12,12 @@ router.get('/', async (req, res) => {
 
   // 抓出order_main資訊
   // const member_sid = 5;
-  const order_main = `SELECT sid, amount, buy_time, pay_time, method_sid, name, address, phone, email FROM order_main WHERE member_sid= ${member_sid}`;
+  const order_main = `SELECT sid, amount, buy_time, pay_time, method_sid, name, address, phone, email FROM order_main WHERE member_sid= ${member_sid} ORDER BY sid DESC limit 1`;
   const [omrows] = await db.query(order_main, []);
   const omdata = omrows; //data = 所有資訊
   const sidFromOrder_main = omdata[0].sid; //抓出該訂單的sid
 
   //   抓出相應sid的order_detail資訊;
-
   const order_detail = `SELECT
   od.sid,
   od.order_sid,
