@@ -9,7 +9,6 @@ router.post('/', async (req, res) => {
   // db暫時不存宅配方式deliveryMethod
   const { name, address, phone, email, deliveryMethod, paymentMethod } =
     req.body;
-  console.log(name, address, phone, email, deliveryMethod, paymentMethod);
   if (!name || !address || !phone || !email) {
     return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
   }

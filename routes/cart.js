@@ -232,10 +232,38 @@ WHERE
       }
     );
   })
-  .get('/newebpayInfo', async (req, res, next) => {
+  .post('/newebpayInfo', async (req, res, next) => {
     const { sid: member_sid } = res.locals.user;
-    const order_main = `SELECT sid FROM order_main WHERE member_sid= ${member_sid} ORDER BY sid DESC limit 1`;
-    const [omrows] = await db.query(order_main, []);
+    const { name, address, phone, email, deliveryMethod, paymentMethod } =
+      req.body;
+    if (!name || !address || !phone || !email) {
+      return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
+    }
+    // 先找到要插入收件人資訊的欄位sid
+    const targetInfo = `SELECT sid FROM order_main WHERE member_sid=? order by  buy_time DESC LIMIT 1`;
+    const [sid] = await db.query(targetInfo, [member_sid]);
+    const importData = sid[0].sid;
+
+    // 把資訊塞進對應的欄位
+    const query = `UPDATE order_main SET pay_time=NOW(),method_sid=?,name=?,address=?,phone=?,email=?,orderNumber=NOW() WHERE member_sid=? AND sid = ?;`;
+
+    try {
+      const [rows] = await db.query(query, [
+        deliveryMethod,
+        name,
+        address,
+        phone,
+        email,
+        member_sid,
+        importData,
+      ]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: '資料庫更新失敗' });
+    }
+
+    const order_main = `SELECT sid FROM order_main WHERE member_sid= ? ORDER BY sid DESC limit 1`;
+    const [omrows] = await db.query(order_main, [member_sid]);
     const omdata = omrows; //data = 所有資訊
     const sidFromOrder_main = omdata[0].sid; //抓出該訂單的sid
 
