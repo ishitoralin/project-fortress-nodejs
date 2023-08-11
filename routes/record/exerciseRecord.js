@@ -46,7 +46,7 @@ router.get(
     FROM record_exercise_record as er
     JOIN record_exercise_type as et ON er.exe_type_sid = et.sid
     WHERE er.member_sid = ${mID} AND DATE(er.exe_date) BETWEEN '${start}' AND '${end}'
-    ORDER BY er.exe_date DESC;`;
+    ORDER BY er.sid ASC;`;
 
     // let sql = `SELECT er.sid, er.member_sid, er.exe_type_sid AS typeID, et.exercise_name AS name, et.exercise_description, er.weight AS quantity, er.sets, er.reps, ebr.bodyPart_sid, et.exercise_img AS img, DATE(er.exe_date) AS date
     // FROM record_exercise_record as er
