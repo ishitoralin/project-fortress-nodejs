@@ -13,6 +13,7 @@ const { protect } = require(__dirname + '/../modules/auth.js');
 router.use(protect);
 // 匯data進購物車
 router
+  // import data into shoppingcart
   .get('/', async (req, res) => {
     const { sid } = res.locals.user;
     if (!sid || isNaN(sid)) {
@@ -72,7 +73,118 @@ WHERE
       res.status(500).json('資料擷取失敗');
     }
   })
+  // 1st page delete item
+  .delete('/SCdelete/:sid', async (req, res) => {
+    const order_sid = req.params?.sid;
+    if (!order_sid) {
+      return res.status(400).json({ error: '無效的請求，請檢查輸入資料' });
+    }
 
+    const query = `DELETE FROM order_cart WHERE order_cart.sid=?`;
+
+    try {
+      // const [result] = await db.query(query, [order_sid]);
+      const [result] = await db.query(query, [order_sid]);
+      const data = result;
+      res.status(200).json({ code: 200, data });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: '資料庫更新失敗' });
+    }
+  })
+  // 購物車編輯數量時，可編輯購物車
+  .put('/SCeditquantity/:sid', async (req, res) => {
+    const sid = req.params?.sid;
+
+    if (!sid || isNaN(sid)) {
+      return res.status(404).json({ error: '無效的id' });
+    }
+    // 前端送req過來，要包含order_sid、quantity
+    // 解構req.body，先判定有沒有接收到資料
+    const { order_sid, quantity } = req.body;
+    if (isNaN(quantity)) {
+      return res.status(400).json({ error: '無效的數量' });
+    }
+
+    // 假設有的話開始處理，把order sid 丟進where sid，quantity丟進quantity
+    const query = `UPDATE
+  order_cart 
+SET 
+  quantity=?
+WHERE 
+  sid = ?`;
+
+    try {
+      const [result] = await db.query(query, [quantity, order_sid]);
+      const data = result;
+      res.status(200).json({ code: 200, data });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: '資料庫更新失敗' });
+    }
+  })
+  // 1st page確認訂單
+  .post('/SCconfirm', async (req, res) => {
+    const { sid: member_sid } = res.locals.user;
+
+    //db抓出來的所有order_cart資料，陣列
+    const getData = `SELECT * FROM order_cart WHERE member_sid = ${member_sid}`;
+    const [cart] = await db.query(getData, []);
+
+    //把資料塞到order_main
+    const insertDataToMain = `INSERT INTO 
+    order_main
+    (member_sid,  amount, 
+      buy_time, pay_time, method_sid, 
+       name,address,phone,email) 
+    VALUES 
+    (?,?,
+      NOW(),?,?,
+      ?,?,?,
+      ?)`;
+    await db.query(insertDataToMain, [
+      `${member_sid}`,
+      cart.length,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+
+    //   把剛剛的order_main資料撈出來(為了取他的sid)
+    const updatedMainData = `SELECT * FROM order_main WHERE member_sid = ${member_sid} ORDER BY buy_time DESC LIMIT 1`;
+    const [getMainData] = await db.query(updatedMainData, []);
+    const { sid } = getMainData[0]; //取新建的order_main的sid
+
+    //   把資料塞到order_detail
+
+    cart.map(async (v) => {
+      const { products_type_sid, item_sid, quantity } = v;
+      const insertDataToDetail = `INSERT INTO
+      order_detail(order_sid, member_sid, products_type_sid,
+        item_sid, quantity, created_at)
+      VALUES (?,?,?,?,?,NOW())`;
+      await db.query(insertDataToDetail, [
+        sid,
+        member_sid,
+        products_type_sid,
+        item_sid,
+        quantity,
+      ]);
+    });
+
+    const remove = `DELETE FROM order_cart WHERE member_sid = ?`;
+    const removeData = await db.query(remove, [member_sid]);
+    try {
+      res.status(200).json({ code: 200 });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: '資料庫更新失敗' });
+    }
+  })
+  // no function
   .get('/sendingPdf', async (req, res) => {
     const { sid } = res.locals.user;
     console.log('hello world');
