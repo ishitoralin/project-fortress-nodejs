@@ -69,7 +69,7 @@ router.get('/', getUser, async (req, res) => {
   }
 
   if (keyword) {
-    queryObj.sqlList.push(`l.name LIKE ? OR c.nickname LIKE ?`);
+    queryObj.sqlList.push(`(l.name LIKE ? OR c.nickname LIKE ?)`);
     queryObj.queryItems.push(`%${keyword}%`, `%${keyword}%`);
   }
 
