@@ -4,7 +4,6 @@ require('dayjs/locale/zh-tw');
 const router = express.Router();
 router.get('/', async (req, res) => {
   const query = `SELECT * FROM order_delivery_method WHERE 1`;
-
   try {
     const [rows] = await db.query(query, []);
     const data = rows;

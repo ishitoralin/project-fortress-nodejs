@@ -9,13 +9,10 @@ const productRouter = require('./routes/productRoutes.js');
 const emailRouter = require('./routes/emailRoutes.js');
 
 const cart = require(__dirname + '/routes/cart.js');
-const SCeditquantity = require(__dirname + '/routes/SCeditquantity');
 const SCadd = require(__dirname + '/routes/SCadd');
-const SCdelete = require(__dirname + '/routes/SCdelete');
 const SCrecommanded = require(__dirname + '/routes/SCrecommanded');
 const SCpopular = require(__dirname + '/routes/SCpopular');
 const SChotlesson = require(__dirname + '/routes/SChotlesson');
-const SCconfirm = require(__dirname + '/routes/SCconfirm');
 const OLbuyerData = require(__dirname + '/routes/OLbuyerData');
 const OLautofillinfo = require(__dirname + '/routes/OLautofillinfo');
 const OLdelivery = require(__dirname + '/routes/OLdelivery');
@@ -57,10 +54,7 @@ app.use('/api/email', emailRouter);
 // const cart = );
 // shoppingcart use
 app.use('/cart', cart);
-app.use('/SCeditquantity', SCeditquantity);
 app.use('/SCadd', SCadd);
-app.use('/SCconfirm', SCconfirm);
-app.use('/SCdelete', SCdelete);
 // button for deleting all items at once
 app.use('/SCrecommanded', SCrecommanded);
 app.use('/SCpopular', SCpopular);
