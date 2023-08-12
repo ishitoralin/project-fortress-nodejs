@@ -1,5 +1,6 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
+const { getUser } = require(__dirname + '/../modules/auth.js');
 
 const router = express.Router();
 
@@ -8,6 +9,32 @@ router.get('/all', async (req, res) => {
     'SELECT c.*, l.name as location FROM c_l_coachs c JOIN c_l_location l ON c.location_sid = l.sid'
   );
   res.json(data);
+});
+
+router.get('/edit', getUser, async (req, res) => {
+  const sid = res.locals.user?.sid || null;
+  const sql = `SELECT * FROM c_l_coachs WHERE member_sid = ${sid}`;
+  const [result] = await db.query(sql);
+
+  res.json(result);
+});
+
+router.post('/edit', getUser, async (req, res) => {
+  const sid = res.locals.user?.sid || null;
+  if (sid === null) return res.json({ result: false });
+
+  const { nickname, introduction } = req.body;
+  if (typeof nickname !== 'string' || typeof introduction !== 'string') {
+    return res.json({ result: false });
+  }
+
+  const sql = `UPDATE c_l_coachs SET nickname = ?, introduction = ? WHERE member_sid = ${sid}`;
+  const [result] = await db.query(sql, [nickname, introduction]);
+
+  res.json({
+    success: result.affectedRows === 1,
+    isEdit: result.changedRows === 1,
+  });
 });
 
 router.get('/:id', async (req, res) => {
