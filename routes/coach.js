@@ -1,15 +1,8 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const upload = require('../modules/coach-img-uploads.js');
 const { getUser } = require(__dirname + '/../modules/auth.js');
-
-const base64Encode = (filePath) => {
-  const bitmap = fs.readFileSync(filePath);
-
-  return new Buffer.from(bitmap).toString('base64');
-};
+const { toBase64 } = require(__dirname + '/../modules/coach-img-to-base64.js');
 
 const router = express.Router();
 
@@ -32,18 +25,17 @@ router.post(
   '/upload-img',
   getUser,
   upload.single('coach-img'),
+  toBase64,
   async (req, res) => {
+    const { filename, base64Text } = req.file;
     const sid = res.locals.user?.sid || null;
     if (sid === null) return res.json({ result: false });
 
-    const imgExtend = path.extname(req.file.filename);
-    const base64Text =
-      `data:image/${imgExtend};base64,` + base64Encode(req.file.filename);
-    // console.log(req.file.filename, req.file.destination);
-    res.json({
-      filename: req.file.filename,
-      destination: req.file.destination,
-    });
+    const sql =
+      'UPDATE c_l_coachs SET img = ?, img_base64 = ? WHERE member_sid = ?';
+    const [result] = await db.query(sql, [filename, base64Text, sid]);
+
+    res.json({ success: result.changedRows === 1, filename });
   }
 );
 
