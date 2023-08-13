@@ -35,7 +35,15 @@ router.post(
       'UPDATE c_l_coachs SET img = ?, img_base64 = ? WHERE member_sid = ?';
     const [result] = await db.query(sql, [filename, base64Text, sid]);
 
-    res.json({ success: result.changedRows === 1, filename });
+    res.json(
+      result.changedRows === 1
+        ? {
+            success: true,
+            filename,
+            base64Text,
+          }
+        : { success: false }
+    );
   }
 );
 
