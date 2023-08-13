@@ -1,5 +1,6 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
+const dayjs = require('dayjs');
 const upload = require('../modules/coach-img-uploads.js');
 const { getUser } = require(__dirname + '/../modules/auth.js');
 const { toBase64 } = require(__dirname + '/../modules/coach-img-to-base64.js');
@@ -18,8 +19,40 @@ router.get('/edit', getUser, async (req, res) => {
   const sql = `SELECT * FROM c_l_coachs WHERE member_sid = ${sid}`;
   const [result] = await db.query(sql);
 
+  if (result.length === 0) return res.json(result);
+
+  const getLessonsSql = `
+    SELECT sid, name, time, period, capacity, enrolled 
+    FROM c_l_lessons 
+    WHERE coach_sid = ${result[0].sid}
+  `;
+  const [lessons] = await db.query(getLessonsSql);
+
+  const enrolledData = await getEnrolledCount();
+
+  // add enrolled data
+  lessons.forEach((lesson) => {
+    if (!enrolledData.has(lesson.sid)) return;
+    lesson.enrolled =
+      enrolledData.get(lesson.sid) > lesson.capacity
+        ? lesson.capacity
+        : enrolledData.get(lesson.sid);
+  });
+  // lessons.forEach(
+  //   (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
+  // );
+  result[0].lessons = lessons;
+  // console.log(lessons);
+
   res.json(result);
 });
+
+const getEnrolledCount = async () => {
+  const sql =
+    'SELECT item_sid as lesson_sid, SUM(quantity) as count FROM order_detail WHERE products_type_sid = 4 GROUP BY item_sid';
+  const [datas] = await db.query(sql);
+  return new Map(datas.map((data) => [data.lesson_sid, parseInt(data.count)]));
+};
 
 router.post(
   '/upload-img',
