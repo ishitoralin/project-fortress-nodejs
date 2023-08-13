@@ -1,6 +1,15 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const upload = require('../modules/coach-img-uploads.js');
 const { getUser } = require(__dirname + '/../modules/auth.js');
+
+const base64Encode = (filePath) => {
+  const bitmap = fs.readFileSync(filePath);
+
+  return new Buffer.from(bitmap).toString('base64');
+};
 
 const router = express.Router();
 
@@ -18,6 +27,25 @@ router.get('/edit', getUser, async (req, res) => {
 
   res.json(result);
 });
+
+router.post(
+  '/upload-img',
+  getUser,
+  upload.single('coach-img'),
+  async (req, res) => {
+    const sid = res.locals.user?.sid || null;
+    if (sid === null) return res.json({ result: false });
+
+    const imgExtend = path.extname(req.file.filename);
+    const base64Text =
+      `data:image/${imgExtend};base64,` + base64Encode(req.file.filename);
+    // console.log(req.file.filename, req.file.destination);
+    res.json({
+      filename: req.file.filename,
+      destination: req.file.destination,
+    });
+  }
+);
 
 router.post('/edit', getUser, async (req, res) => {
   const sid = res.locals.user?.sid || null;
