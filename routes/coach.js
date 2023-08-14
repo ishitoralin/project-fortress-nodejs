@@ -1,6 +1,5 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
-const dayjs = require('dayjs');
 const upload = require('../modules/coach-img-uploads.js');
 const { getUser } = require(__dirname + '/../modules/auth.js');
 const { toBase64 } = require(__dirname + '/../modules/coach-img-to-base64.js');
@@ -28,9 +27,8 @@ router.get('/edit', getUser, async (req, res) => {
   `;
   const [lessons] = await db.query(getLessonsSql);
 
-  const enrolledData = await getEnrolledCount();
-
   // add enrolled data
+  const enrolledData = await getEnrolledCount();
   lessons.forEach((lesson) => {
     if (!enrolledData.has(lesson.sid)) return;
     lesson.enrolled =
@@ -38,11 +36,8 @@ router.get('/edit', getUser, async (req, res) => {
         ? lesson.capacity
         : enrolledData.get(lesson.sid);
   });
-  // lessons.forEach(
-  //   (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
-  // );
+
   result[0].lessons = lessons;
-  // console.log(lessons);
 
   res.json(result);
 });
