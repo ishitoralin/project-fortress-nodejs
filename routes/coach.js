@@ -21,7 +21,7 @@ router.get('/edit', getUser, async (req, res) => {
   if (result.length === 0) return res.json(result);
 
   const getLessonsSql = `
-    SELECT sid, name, time, period, capacity, enrolled 
+    SELECT sid, name, time, period, capacity, enrolled, category_sid 
     FROM c_l_lessons 
     WHERE coach_sid = ${result[0].sid}
   `;
@@ -58,6 +58,8 @@ router.post(
     const { filename, base64Text } = req.file;
     const sid = res.locals.user?.sid || null;
     if (sid === null) return res.json({ result: false });
+    if (base64Text === undefined)
+      return res.json({ result: false, message: '錯誤的圖片格式' });
 
     const sql =
       'UPDATE c_l_coachs SET img = ?, img_base64 = ? WHERE member_sid = ?';
