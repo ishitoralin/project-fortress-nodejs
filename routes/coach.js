@@ -1,6 +1,5 @@
 const db = require(__dirname + '/../modules/connectDB.js');
 const express = require('express');
-const dayjs = require('dayjs');
 const upload = require('../modules/coach-img-uploads.js');
 const { getUser } = require(__dirname + '/../modules/auth.js');
 const { toBase64 } = require(__dirname + '/../modules/coach-img-to-base64.js');
@@ -22,15 +21,14 @@ router.get('/edit', getUser, async (req, res) => {
   if (result.length === 0) return res.json(result);
 
   const getLessonsSql = `
-    SELECT sid, name, time, period, capacity, enrolled 
+    SELECT sid, name, time, period, capacity, enrolled, category_sid 
     FROM c_l_lessons 
     WHERE coach_sid = ${result[0].sid}
   `;
   const [lessons] = await db.query(getLessonsSql);
 
-  const enrolledData = await getEnrolledCount();
-
   // add enrolled data
+  const enrolledData = await getEnrolledCount();
   lessons.forEach((lesson) => {
     if (!enrolledData.has(lesson.sid)) return;
     lesson.enrolled =
@@ -38,11 +36,8 @@ router.get('/edit', getUser, async (req, res) => {
         ? lesson.capacity
         : enrolledData.get(lesson.sid);
   });
-  // lessons.forEach(
-  //   (lesson) => (lesson.time = dayjs(lesson.time).format('YYYY/MM/DD HH:mm:ss'))
-  // );
+
   result[0].lessons = lessons;
-  // console.log(lessons);
 
   res.json(result);
 });
@@ -63,6 +58,8 @@ router.post(
     const { filename, base64Text } = req.file;
     const sid = res.locals.user?.sid || null;
     if (sid === null) return res.json({ result: false });
+    if (base64Text === undefined)
+      return res.json({ result: false, message: '錯誤的圖片格式' });
 
     const sql =
       'UPDATE c_l_coachs SET img = ?, img_base64 = ? WHERE member_sid = ?';
