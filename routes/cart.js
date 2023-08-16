@@ -266,7 +266,7 @@ WHERE
     const [omrows] = await db.query(order_main, [member_sid]);
     const omdata = omrows; //data = 所有資訊
     const sidFromOrder_main = omdata[0].sid; //抓出該訂單的sid
-
+    console.log(sidFromOrder_main, 'L269');
     // 計算訂單總價
     const totalPrice = `SELECT SUM(price*quantity) AS totalPrice FROM (
       SELECT
@@ -299,12 +299,14 @@ WHERE
         ) AS ln ON oc.products_type_sid = 4
         AND oc.item_sid = ln.sid
       WHERE
-        oc.member_sid = 5
+        oc.member_sid = ?
     ) AS derived_table_alias WHERE member_sid = ? AND order_sid = ?`;
     const [FinalPriceQuery] = await db.query(totalPrice, [
       member_sid,
+      member_sid,
       sidFromOrder_main,
     ]);
+    console.log(FinalPriceQuery, 'asd308');
     const FinalPrice = parseInt(FinalPriceQuery[0].totalPrice);
     // oc.sid,
     // oc.member_sid,
