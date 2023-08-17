@@ -19,6 +19,7 @@ const OLdelivery = require(__dirname + '/routes/OLdelivery');
 const OLdeliveryMethod = require(__dirname + '/routes/OLdeliveryMethod');
 const FObuyerinfo = require(__dirname + '/routes/FObuyerinfo');
 const FOitemlist = require(__dirname + '/routes/FOitemlist');
+const linepaytest = require(__dirname + '/routes/linepaytest');
 // >>> for Sean
 const testRoutes = require(__dirname + '/routes/record/test.js');
 const exerciseRoutes = require(__dirname + '/routes/record/exerciseType.js');
@@ -65,6 +66,7 @@ app.use('/OLdelivery', OLdelivery);
 app.use('/OLdeliveryMethod', OLdeliveryMethod);
 app.use('/FObuyerinfo', FObuyerinfo);
 app.use('/FOitemlist', FOitemlist);
+app.use('/linepaytest', linepaytest);
 // =================================================================
 // === record ======================================================
 // =================================================================

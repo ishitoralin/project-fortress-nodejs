@@ -356,6 +356,8 @@ WHERE
     */
     const timeStamp = Date.now();
     const amt = parseInt(amount); //幣值，沒給的話預設是台幣
+    // console.log(amount, amt, 'abc123');
+
     const MerchantOrderNo = `J${timeStamp}`; //有30字最大上限，限英文數字底線
     const importOrderNumber = `UPDATE order_main SET orderNumber=? WHERE member_sid=? AND sid=?`;
     const orderNumber = await db.query(importOrderNumber, [
@@ -382,7 +384,8 @@ WHERE
         RespondType: 'String',
         MerchantOrderNo,
         Amt: amt,
-        NotifyURL: 'https://ce5b-111-240-210-116.ngrok-free.app/note', //直擊後端
+        // NotifyURL: 'https://ce5b-111-240-210-116.ngrok-free.app/note', //直擊後端
+        NotifyURL: '', //直擊後端
         ReturnURL: 'http://localhost:3000/shoppingcart/thirdstage', //直擊EJS畫面但是是用post方法
         ItemDesc: '感謝購買健身堡壘商品', //交易詳細資訊 EX 商品名稱 數量
       }),
